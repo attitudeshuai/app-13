@@ -39,6 +39,11 @@ public static class DbSeeder
         {
             await SeedConsumptionRecordsAsync(context);
         }
+
+        if (!await context.Recipes.AnyAsync())
+        {
+            await SeedRecipesAsync(context);
+        }
     }
 
     private static async Task SeedUsersAsync(FridgeWatchDbContext context)
@@ -437,6 +442,172 @@ public static class DbSeeder
         };
 
         await context.ConsumptionRecords.AddRangeAsync(records);
+        await context.SaveChangesAsync();
+    }
+
+    private static async Task SeedRecipesAsync(FridgeWatchDbContext context)
+    {
+        var recipes = new List<Recipe>
+        {
+            new Recipe
+            {
+                Name = "番茄炒鸡蛋",
+                Description = "经典家常菜，酸甜可口，营养丰富，适合快速晚餐",
+                Category = "家常菜",
+                Difficulty = 1,
+                CookTimeMinutes = 15,
+                Instructions = "1. 西红柿洗净切块，鸡蛋打散备用\n2. 热锅下油，倒入蛋液炒至凝固盛出\n3. 锅中再加少许油，放入西红柿翻炒出汁\n4. 加入炒好的鸡蛋，加盐、糖调味\n5. 翻炒均匀即可出锅",
+                ImageUrl = "https://images.unsplash.com/photo-1607532941433-304659e8198a?w=400",
+                Servings = 2,
+                CreatedAt = DateTime.UtcNow.AddDays(-10),
+                Ingredients = new List<RecipeIngredient>
+                {
+                    new() { IngredientName = "西红柿", IngredientCategory = "蔬菜", Quantity = 3, Unit = "个", IsOptional = false },
+                    new() { IngredientName = "鸡蛋", IngredientCategory = "蛋类", Quantity = 3, Unit = "个", IsOptional = false },
+                    new() { IngredientName = "食用油", IngredientCategory = "调料", Quantity = 2, Unit = "勺", IsOptional = false },
+                    new() { IngredientName = "盐", IngredientCategory = "调料", Quantity = 1, Unit = "克", IsOptional = false },
+                    new() { IngredientName = "白糖", IngredientCategory = "调料", Quantity = 1, Unit = "勺", IsOptional = true }
+                }
+            },
+            new Recipe
+            {
+                Name = "香煎鸡胸肉",
+                Description = "高蛋白低脂健康餐，外焦里嫩，适合健身人群",
+                Category = "健身餐",
+                Difficulty = 2,
+                CookTimeMinutes = 20,
+                Instructions = "1. 鸡胸肉洗净，用厨房纸吸干水分\n2. 两面撒盐、黑胡椒腌制10分钟\n3. 热锅加油，中火煎至两面金黄\n4. 加入蒜末、黄油增香\n5. 盛出静置3分钟后切片食用",
+                ImageUrl = "https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=400",
+                Servings = 2,
+                CreatedAt = DateTime.UtcNow.AddDays(-10),
+                Ingredients = new List<RecipeIngredient>
+                {
+                    new() { IngredientName = "鸡胸肉", IngredientCategory = "肉类", Quantity = 0.5m, Unit = "公斤", IsOptional = false },
+                    new() { IngredientName = "橄榄油", IngredientCategory = "调料", Quantity = 2, Unit = "勺", IsOptional = false },
+                    new() { IngredientName = "黑胡椒", IngredientCategory = "调料", Quantity = 1, Unit = "克", IsOptional = false },
+                    new() { IngredientName = "盐", IngredientCategory = "调料", Quantity = 2, Unit = "克", IsOptional = false },
+                    new() { IngredientName = "大蒜", IngredientCategory = "蔬菜", Quantity = 3, Unit = "瓣", IsOptional = true },
+                    new() { IngredientName = "黄油", IngredientCategory = "乳制品", Quantity = 10, Unit = "克", IsOptional = true }
+                }
+            },
+            new Recipe
+            {
+                Name = "草莓奶昔",
+                Description = "香甜顺滑的水果奶昔，早餐或下午茶的好选择",
+                Category = "饮品",
+                Difficulty = 1,
+                CookTimeMinutes = 5,
+                Instructions = "1. 草莓洗净去蒂\n2. 将草莓、牛奶、酸奶放入搅拌机\n3. 加入蜂蜜或白糖调味\n4. 搅拌至顺滑即可饮用\n5. 可加冰块做成冰沙",
+                ImageUrl = "https://images.unsplash.com/photo-1553530666-ba11a7da3888?w=400",
+                Servings = 2,
+                CreatedAt = DateTime.UtcNow.AddDays(-10),
+                Ingredients = new List<RecipeIngredient>
+                {
+                    new() { IngredientName = "草莓", IngredientCategory = "水果", Quantity = 300, Unit = "克", IsOptional = false },
+                    new() { IngredientName = "牛奶", IngredientCategory = "乳制品", Quantity = 250, Unit = "毫升", IsOptional = false },
+                    new() { IngredientName = "酸奶", IngredientCategory = "乳制品", Quantity = 100, Unit = "克", IsOptional = true },
+                    new() { IngredientName = "蜂蜜", IngredientCategory = "调料", Quantity = 1, Unit = "勺", IsOptional = true },
+                    new() { IngredientName = "冰块", IngredientCategory = "其他", Quantity = 5, Unit = "块", IsOptional = true }
+                }
+            },
+            new Recipe
+            {
+                Name = "三文鱼刺身",
+                Description = "新鲜三文鱼切片，蘸芥末酱油食用，鲜美无比",
+                Category = "海鲜",
+                Difficulty = 1,
+                CookTimeMinutes = 10,
+                Instructions = "1. 三文鱼去皮，用干净的刀切片\n2. 摆盘，用萝卜丝装饰\n3. 准备芥末和酱油作为蘸料\n4. 直接食用即可",
+                ImageUrl = "https://images.unsplash.com/photo-1599084993091-1cb5c0721cc6?w=400",
+                Servings = 2,
+                CreatedAt = DateTime.UtcNow.AddDays(-10),
+                Ingredients = new List<RecipeIngredient>
+                {
+                    new() { IngredientName = "三文鱼", IngredientCategory = "海鲜", Quantity = 300, Unit = "克", IsOptional = false },
+                    new() { IngredientName = "酱油", IngredientCategory = "调料", Quantity = 2, Unit = "勺", IsOptional = false },
+                    new() { IngredientName = "芥末", IngredientCategory = "调料", Quantity = 1, Unit = "克", IsOptional = true },
+                    new() { IngredientName = "白萝卜", IngredientCategory = "蔬菜", Quantity = 50, Unit = "克", IsOptional = true }
+                }
+            },
+            new Recipe
+            {
+                Name = "苹果沙拉",
+                Description = "清爽健康的水果沙拉，简单易做",
+                Category = "沙拉",
+                Difficulty = 1,
+                CookTimeMinutes = 10,
+                Instructions = "1. 苹果洗净去皮切丁\n2. 其他水果（可选）同样处理\n3. 加入酸奶或沙拉酱拌匀\n4. 冷藏后食用更佳",
+                ImageUrl = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400",
+                Servings = 2,
+                CreatedAt = DateTime.UtcNow.AddDays(-10),
+                Ingredients = new List<RecipeIngredient>
+                {
+                    new() { IngredientName = "苹果", IngredientCategory = "水果", Quantity = 2, Unit = "个", IsOptional = false },
+                    new() { IngredientName = "酸奶", IngredientCategory = "乳制品", Quantity = 100, Unit = "克", IsOptional = true },
+                    new() { IngredientName = "沙拉酱", IngredientCategory = "调料", Quantity = 2, Unit = "勺", IsOptional = true },
+                    new() { IngredientName = "蜂蜜", IngredientCategory = "调料", Quantity = 1, Unit = "勺", IsOptional = true }
+                }
+            },
+            new Recipe
+            {
+                Name = "吐司煎蛋",
+                Description = "简单快手早餐，面包酥脆配流心蛋",
+                Category = "早餐",
+                Difficulty = 1,
+                CookTimeMinutes = 10,
+                Instructions = "1. 面包片中间用杯子压出圆形\n2. 热锅融化黄油，放入面包\n3. 在圆孔中打入鸡蛋\n4. 煎至蛋白凝固，翻面煎熟\n5. 撒盐和黑胡椒调味",
+                ImageUrl = "https://images.unsplash.com/photo-1525351484163-7529414344d8?w=400",
+                Servings = 1,
+                CreatedAt = DateTime.UtcNow.AddDays(-10),
+                Ingredients = new List<RecipeIngredient>
+                {
+                    new() { IngredientName = "面包", IngredientCategory = "主食", Quantity = 2, Unit = "片", IsOptional = false },
+                    new() { IngredientName = "鸡蛋", IngredientCategory = "蛋类", Quantity = 2, Unit = "个", IsOptional = false },
+                    new() { IngredientName = "黄油", IngredientCategory = "乳制品", Quantity = 10, Unit = "克", IsOptional = false },
+                    new() { IngredientName = "盐", IngredientCategory = "调料", Quantity = 1, Unit = "克", IsOptional = true },
+                    new() { IngredientName = "黑胡椒", IngredientCategory = "调料", Quantity = 1, Unit = "克", IsOptional = true }
+                }
+            },
+            new Recipe
+            {
+                Name = "牛奶燕麦粥",
+                Description = "营养丰富的暖胃早餐，适合全家食用",
+                Category = "早餐",
+                Difficulty = 1,
+                CookTimeMinutes = 10,
+                Instructions = "1. 锅中倒入牛奶加热\n2. 加入燕麦片，小火煮5分钟\n3. 不停搅拌防止粘锅\n4. 煮至浓稠后关火\n5. 可加蜂蜜、水果等调味",
+                ImageUrl = "https://images.unsplash.com/photo-1517673400267-0251440c45dc?w=400",
+                Servings = 2,
+                CreatedAt = DateTime.UtcNow.AddDays(-10),
+                Ingredients = new List<RecipeIngredient>
+                {
+                    new() { IngredientName = "牛奶", IngredientCategory = "乳制品", Quantity = 500, Unit = "毫升", IsOptional = false },
+                    new() { IngredientName = "燕麦片", IngredientCategory = "主食", Quantity = 80, Unit = "克", IsOptional = false },
+                    new() { IngredientName = "蜂蜜", IngredientCategory = "调料", Quantity = 1, Unit = "勺", IsOptional = true },
+                    new() { IngredientName = "草莓", IngredientCategory = "水果", Quantity = 5, Unit = "颗", IsOptional = true }
+                }
+            },
+            new Recipe
+            {
+                Name = "速冻水饺",
+                Description = "简单便捷的家常主食，适合忙碌的工作日",
+                Category = "主食",
+                Difficulty = 1,
+                CookTimeMinutes = 15,
+                Instructions = "1. 锅中加水烧开\n2. 放入饺子，轻轻搅拌防粘\n3. 水开后加半碗冷水，重复3次\n4. 饺子浮起且鼓胀即可捞出\n5. 配醋、蒜泥蘸料食用",
+                ImageUrl = "https://images.unsplash.com/photo-1563245372-f21724e3856d?w=400",
+                Servings = 2,
+                CreatedAt = DateTime.UtcNow.AddDays(-10),
+                Ingredients = new List<RecipeIngredient>
+                {
+                    new() { IngredientName = "饺子", IngredientCategory = "速冻食品", Quantity = 30, Unit = "个", IsOptional = false },
+                    new() { IngredientName = "醋", IngredientCategory = "调料", Quantity = 2, Unit = "勺", IsOptional = true },
+                    new() { IngredientName = "大蒜", IngredientCategory = "蔬菜", Quantity = 2, Unit = "瓣", IsOptional = true }
+                }
+            }
+        };
+
+        await context.Recipes.AddRangeAsync(recipes);
         await context.SaveChangesAsync();
     }
 }

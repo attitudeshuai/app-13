@@ -59,5 +59,14 @@ public class MappingProfile : Profile
             .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
         CreateMap<ShareLink, ShareLinkDto>();
+
+        CreateMap<Recipe, RecipeDto>();
+        CreateMap<RecipeCreateDto, Recipe>();
+        CreateMap<RecipeUpdateDto, Recipe>()
+            .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
+        CreateMap<RecipeIngredient, RecipeIngredientDto>();
+        CreateMap<RecipeIngredientCreateDto, RecipeIngredient>();
+        CreateMap<RecipeIngredientUpdateDto, RecipeIngredient>();
     }
 }

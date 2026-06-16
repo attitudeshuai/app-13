@@ -11,6 +11,8 @@ public interface IUnitOfWork : IDisposable
     IShoppingListRepository ShoppingLists { get; }
     IShoppingListItemRepository ShoppingListItems { get; }
     IShareLinkRepository ShareLinks { get; }
+    IRecipeRepository Recipes { get; }
+    IRecipeIngredientRepository RecipeIngredients { get; }
 
     Task<int> SaveChangesAsync();
     Task BeginTransactionAsync();

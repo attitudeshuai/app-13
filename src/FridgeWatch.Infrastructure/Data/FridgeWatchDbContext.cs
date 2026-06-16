@@ -19,6 +19,8 @@ public class FridgeWatchDbContext : DbContext
     public DbSet<ShoppingList> ShoppingLists { get; set; }
     public DbSet<ShoppingListItem> ShoppingListItems { get; set; }
     public DbSet<ShareLink> ShareLinks { get; set; }
+    public DbSet<Recipe> Recipes { get; set; }
+    public DbSet<RecipeIngredient> RecipeIngredients { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -132,6 +134,29 @@ public class FridgeWatchDbContext : DbContext
                   .HasForeignKey(sl => sl.HouseholdId)
                   .OnDelete(DeleteBehavior.Cascade);
             entity.Property(sl => sl.Token).IsRequired().HasMaxLength(64);
+        });
+
+        // Recipe 配置
+        modelBuilder.Entity<Recipe>(entity =>
+        {
+            entity.Property(r => r.Name).IsRequired().HasMaxLength(100);
+            entity.Property(r => r.Description).IsRequired().HasMaxLength(500);
+            entity.Property(r => r.Category).IsRequired().HasMaxLength(50);
+            entity.Property(r => r.Instructions).IsRequired().HasMaxLength(2000);
+            entity.Property(r => r.ImageUrl).HasMaxLength(500);
+        });
+
+        // RecipeIngredient 配置
+        modelBuilder.Entity<RecipeIngredient>(entity =>
+        {
+            entity.HasOne(ri => ri.Recipe)
+                  .WithMany(r => r.Ingredients)
+                  .HasForeignKey(ri => ri.RecipeId)
+                  .OnDelete(DeleteBehavior.Cascade);
+            entity.Property(ri => ri.IngredientName).IsRequired().HasMaxLength(100);
+            entity.Property(ri => ri.IngredientCategory).IsRequired().HasMaxLength(50);
+            entity.Property(ri => ri.Unit).IsRequired().HasMaxLength(20);
+            entity.Property(ri => ri.Quantity).HasColumnType("decimal(18,2)");
         });
     }
 }

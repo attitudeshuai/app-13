@@ -19,6 +19,8 @@ public class UnitOfWork : IUnitOfWork
     public IShoppingListRepository ShoppingLists { get; private set; }
     public IShoppingListItemRepository ShoppingListItems { get; private set; }
     public IShareLinkRepository ShareLinks { get; private set; }
+    public IRecipeRepository Recipes { get; private set; }
+    public IRecipeIngredientRepository RecipeIngredients { get; private set; }
 
     public UnitOfWork(FridgeWatchDbContext context)
     {
@@ -32,6 +34,8 @@ public class UnitOfWork : IUnitOfWork
         ShoppingLists = new ShoppingListRepository(context);
         ShoppingListItems = new ShoppingListItemRepository(context);
         ShareLinks = new ShareLinkRepository(context);
+        Recipes = new RecipeRepository(context);
+        RecipeIngredients = new RecipeIngredientRepository(context);
     }
 
     public async Task<int> SaveChangesAsync()
