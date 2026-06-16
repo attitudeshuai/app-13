@@ -21,6 +21,7 @@ public static class ApplicationServiceRegistration
         services.AddScoped<IConsumptionRecordService, ConsumptionRecordService>();
         services.AddScoped<IStatsService, StatsService>();
         services.AddScoped<IShoppingListService, ShoppingListService>();
+        services.AddScoped<IShareService, ShareService>();
 
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 

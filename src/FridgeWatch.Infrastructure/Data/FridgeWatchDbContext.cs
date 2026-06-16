@@ -18,6 +18,7 @@ public class FridgeWatchDbContext : DbContext
     public DbSet<ConsumptionRecord> ConsumptionRecords { get; set; }
     public DbSet<ShoppingList> ShoppingLists { get; set; }
     public DbSet<ShoppingListItem> ShoppingListItems { get; set; }
+    public DbSet<ShareLink> ShareLinks { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -120,6 +121,17 @@ public class FridgeWatchDbContext : DbContext
             entity.Property(sli => sli.Unit).IsRequired().HasMaxLength(20);
             entity.Property(sli => sli.Quantity).HasColumnType("decimal(18,2)");
             entity.Property(sli => sli.Notes).HasMaxLength(500);
+        });
+
+        // ShareLink 配置
+        modelBuilder.Entity<ShareLink>(entity =>
+        {
+            entity.HasIndex(sl => sl.Token).IsUnique();
+            entity.HasOne(sl => sl.Household)
+                  .WithMany()
+                  .HasForeignKey(sl => sl.HouseholdId)
+                  .OnDelete(DeleteBehavior.Cascade);
+            entity.Property(sl => sl.Token).IsRequired().HasMaxLength(64);
         });
     }
 }

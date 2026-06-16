@@ -46,6 +46,9 @@ public static class InfrastructureServiceRegistration
         services.AddScoped<IFoodItemRepository, FoodItemRepository>();
         services.AddScoped<IExpiryAlertRepository, ExpiryAlertRepository>();
         services.AddScoped<IConsumptionRecordRepository, ConsumptionRecordRepository>();
+        services.AddScoped<IShoppingListRepository, ShoppingListRepository>();
+        services.AddScoped<IShoppingListItemRepository, ShoppingListItemRepository>();
+        services.AddScoped<IShareLinkRepository, ShareLinkRepository>();
 
         services.AddScoped<IJwtService, JwtService>();
 

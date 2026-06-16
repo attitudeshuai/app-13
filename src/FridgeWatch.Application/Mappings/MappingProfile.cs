@@ -57,5 +57,7 @@ public class MappingProfile : Profile
         CreateMap<ShoppingListItemCreateDto, ShoppingListItem>();
         CreateMap<ShoppingListItemUpdateDto, ShoppingListItem>()
             .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
+        CreateMap<ShareLink, ShareLinkDto>();
     }
 }

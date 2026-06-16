@@ -10,6 +10,7 @@ public interface IUnitOfWork : IDisposable
     IConsumptionRecordRepository ConsumptionRecords { get; }
     IShoppingListRepository ShoppingLists { get; }
     IShoppingListItemRepository ShoppingListItems { get; }
+    IShareLinkRepository ShareLinks { get; }
 
     Task<int> SaveChangesAsync();
     Task BeginTransactionAsync();
