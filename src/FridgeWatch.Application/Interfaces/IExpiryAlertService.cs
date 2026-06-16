@@ -6,7 +6,7 @@ namespace FridgeWatch.Application.Interfaces;
 public interface IExpiryAlertService
 {
     Task<PagedResultDto<ExpiryAlertDto>> GetListAsync(QueryParametersDto parameters, int? foodItemId = null);
-    Task<PagedResultDto<ExpiryAlertDto>> GetMineAsync(int userId, QueryParametersDto parameters);
+    Task<PagedResultDto<ExpiryAlertDto>> GetMineAsync(int userId, QueryParametersDto parameters, bool? isRead = null);
     Task<ExpiryAlertDto> GetByIdAsync(int id);
     Task<ExpiryAlertDto> CreateAsync(ExpiryAlertCreateDto dto, int userId);
     Task<ExpiryAlertDto> UpdateAsync(int id, ExpiryAlertUpdateDto dto, int userId);
@@ -14,4 +14,5 @@ public interface IExpiryAlertService
     Task<int> GetUnreadCountAsync(int userId);
     Task MarkAsReadAsync(int id, int userId);
     Task MarkAllAsReadAsync(int userId);
+    Task BatchDeleteAsync(IEnumerable<int> ids, int userId);
 }

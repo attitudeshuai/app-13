@@ -12,11 +12,16 @@ public class ExpiryAlertRepository : Repository<ExpiryAlert, int>, IExpiryAlertR
     {
     }
 
-    public async Task<PagedResult<ExpiryAlert>> GetByUserIdAsync(int userId, QueryParameters parameters)
+    public async Task<PagedResult<ExpiryAlert>> GetByUserIdAsync(int userId, QueryParameters parameters, bool? isRead = null)
     {
         var query = _dbSet
             .Include(ea => ea.FoodItem)
             .Where(ea => ea.UserId == userId);
+
+        if (isRead.HasValue)
+        {
+            query = query.Where(ea => ea.IsRead == isRead.Value);
+        }
 
         if (!string.IsNullOrWhiteSpace(parameters.SearchTerm))
         {
@@ -87,5 +92,11 @@ public class ExpiryAlertRepository : Repository<ExpiryAlert, int>, IExpiryAlertR
             alert.UpdatedAt = DateTime.UtcNow;
         }
         _dbSet.UpdateRange(alerts);
+    }
+
+    public async Task DeleteByIdsAsync(IEnumerable<int> ids)
+    {
+        var alerts = await _dbSet.Where(ea => ids.Contains(ea.Id)).ToListAsync();
+        _dbSet.RemoveRange(alerts);
     }
 }

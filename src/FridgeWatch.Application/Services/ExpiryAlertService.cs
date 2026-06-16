@@ -35,10 +35,10 @@ public class ExpiryAlertService : IExpiryAlertService
         return _mapper.Map<PagedResultDto<ExpiryAlertDto>>(result);
     }
 
-    public async Task<PagedResultDto<ExpiryAlertDto>> GetMineAsync(int userId, QueryParametersDto parameters)
+    public async Task<PagedResultDto<ExpiryAlertDto>> GetMineAsync(int userId, QueryParametersDto parameters, bool? isRead = null)
     {
         var queryParams = _mapper.Map<QueryParameters>(parameters);
-        var result = await _unitOfWork.ExpiryAlerts.GetByUserIdAsync(userId, queryParams);
+        var result = await _unitOfWork.ExpiryAlerts.GetByUserIdAsync(userId, queryParams, isRead);
         return _mapper.Map<PagedResultDto<ExpiryAlertDto>>(result);
     }
 
@@ -137,6 +137,27 @@ public class ExpiryAlertService : IExpiryAlertService
     public async Task MarkAllAsReadAsync(int userId)
     {
         await _unitOfWork.ExpiryAlerts.MarkAllAsReadAsync(userId);
+        await _unitOfWork.SaveChangesAsync();
+    }
+
+    public async Task BatchDeleteAsync(IEnumerable<int> ids, int userId)
+    {
+        var idList = ids.ToList();
+        if (!idList.Any())
+        {
+            throw new BusinessException("请选择要删除的提醒");
+        }
+
+        var alerts = await _unitOfWork.ExpiryAlerts.FindAsync(
+            ea => idList.Contains(ea.Id) && ea.UserId == userId);
+        var ownedIds = alerts.Select(a => a.Id).ToList();
+
+        if (!ownedIds.Any())
+        {
+            throw new BusinessException("没有可删除的提醒");
+        }
+
+        await _unitOfWork.ExpiryAlerts.DeleteByIdsAsync(ownedIds);
         await _unitOfWork.SaveChangesAsync();
     }
 }

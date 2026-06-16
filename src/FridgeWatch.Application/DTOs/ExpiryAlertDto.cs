@@ -26,3 +26,8 @@ public class ExpiryAlertUpdateDto
     public bool? IsRead { get; set; }
     public AlertType? AlertType { get; set; }
 }
+
+public class ExpiryAlertBatchDeleteDto
+{
+    public List<int> Ids { get; set; } = new();
+}

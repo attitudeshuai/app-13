@@ -26,10 +26,10 @@ public class ExpiryAlertsController : ApiControllerBase
     }
 
     [HttpGet("mine")]
-    public async Task<IActionResult> GetMine([FromQuery] QueryParametersDto parameters)
+    public async Task<IActionResult> GetMine([FromQuery] QueryParametersDto parameters, [FromQuery] bool? isRead = null)
     {
         var userId = GetCurrentUserId();
-        var result = await _expiryAlertService.GetMineAsync(userId, parameters);
+        var result = await _expiryAlertService.GetMineAsync(userId, parameters, isRead);
         return Success(result, "获取成功");
     }
 
@@ -86,5 +86,13 @@ public class ExpiryAlertsController : ApiControllerBase
         var userId = GetCurrentUserId();
         await _expiryAlertService.MarkAllAsReadAsync(userId);
         return Success("全部已读成功");
+    }
+
+    [HttpPost("batch-delete")]
+    public async Task<IActionResult> BatchDelete([FromBody] ExpiryAlertBatchDeleteDto dto)
+    {
+        var userId = GetCurrentUserId();
+        await _expiryAlertService.BatchDeleteAsync(dto.Ids, userId);
+        return Success("批量删除成功");
     }
 }
