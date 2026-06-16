@@ -10,4 +10,5 @@ public interface IHouseholdService
     Task<HouseholdDto> CreateAsync(HouseholdCreateDto dto, int userId);
     Task<HouseholdDto> UpdateAsync(int id, HouseholdUpdateDto dto, int userId);
     Task DeleteAsync(int id, int userId);
+    Task<HouseholdDto> ResetInviteCodeAsync(int householdId, ResetInviteCodeDto dto, int userId);
 }

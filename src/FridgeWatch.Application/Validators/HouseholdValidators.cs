@@ -22,3 +22,14 @@ public class HouseholdUpdateDtoValidator : AbstractValidator<HouseholdUpdateDto>
             .When(x => !string.IsNullOrEmpty(x.Name));
     }
 }
+
+public class ResetInviteCodeDtoValidator : AbstractValidator<ResetInviteCodeDto>
+{
+    public ResetInviteCodeDtoValidator()
+    {
+        RuleFor(x => x.ValidDays)
+            .GreaterThan(0).WithMessage("有效天数必须大于0")
+            .LessThanOrEqualTo(365).WithMessage("有效天数不能超过365天")
+            .When(x => x.ValidDays.HasValue);
+    }
+}

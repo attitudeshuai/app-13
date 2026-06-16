@@ -52,6 +52,7 @@ public class HouseholdService : IHouseholdService
         var household = _mapper.Map<Household>(dto);
         household.CreatedBy = userId;
         household.InviteCode = GenerateInviteCode();
+        household.InviteCodeExpiresAt = DateTime.UtcNow.AddDays(7);
 
         await _unitOfWork.BeginTransactionAsync();
         try
@@ -115,6 +116,35 @@ public class HouseholdService : IHouseholdService
 
         await _unitOfWork.Households.DeleteAsync(id);
         await _unitOfWork.SaveChangesAsync();
+    }
+
+    public async Task<HouseholdDto> ResetInviteCodeAsync(int householdId, ResetInviteCodeDto dto, int userId)
+    {
+        var household = await _unitOfWork.Households.GetByIdAsync(householdId);
+        if (household == null)
+        {
+            throw new BusinessException("家庭不存在");
+        }
+
+        if (!await _unitOfWork.HouseholdMembers.IsHouseholdOwnerAsync(householdId, userId))
+        {
+            throw new UnauthorizedAccessException("只有家庭所有者可以重置邀请码");
+        }
+
+        if (dto.ValidDays.HasValue && dto.ValidDays.Value <= 0)
+        {
+            throw new BusinessException("有效天数必须大于0");
+        }
+
+        household.InviteCode = GenerateInviteCode();
+        household.InviteCodeExpiresAt = dto.ValidDays.HasValue
+            ? DateTime.UtcNow.AddDays(dto.ValidDays.Value)
+            : null;
+
+        await _unitOfWork.Households.UpdateAsync(household);
+        await _unitOfWork.SaveChangesAsync();
+
+        return _mapper.Map<HouseholdDto>(household);
     }
 
     private string GenerateInviteCode()

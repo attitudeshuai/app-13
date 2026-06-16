@@ -54,4 +54,12 @@ public class HouseholdsController : ApiControllerBase
         await _householdService.DeleteAsync(id, userId);
         return Success("删除成功");
     }
+
+    [HttpPost("{id}/reset-invite-code")]
+    public async Task<IActionResult> ResetInviteCode(int id, [FromBody] ResetInviteCodeDto dto)
+    {
+        var userId = GetCurrentUserId();
+        var result = await _householdService.ResetInviteCodeAsync(id, dto, userId);
+        return Success(result, "邀请码重置成功");
+    }
 }

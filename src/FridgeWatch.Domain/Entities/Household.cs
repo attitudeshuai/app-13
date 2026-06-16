@@ -6,6 +6,7 @@ public class Household : BaseEntity<int>
 {
     public string Name { get; set; } = string.Empty;
     public string InviteCode { get; set; } = string.Empty;
+    public DateTime? InviteCodeExpiresAt { get; set; }
     public int CreatedBy { get; set; }
 
     public virtual ICollection<HouseholdMember> HouseholdMembers { get; set; } = new List<HouseholdMember>();

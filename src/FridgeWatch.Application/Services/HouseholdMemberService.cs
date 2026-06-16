@@ -62,6 +62,11 @@ public class HouseholdMemberService : IHouseholdMemberService
             throw new BusinessException("邀请码无效");
         }
 
+        if (household.InviteCodeExpiresAt.HasValue && household.InviteCodeExpiresAt.Value < DateTime.UtcNow)
+        {
+            throw new BusinessException("邀请码已过期，请联系家庭所有者重新生成");
+        }
+
         var existingMember = await _unitOfWork.HouseholdMembers.GetByHouseholdAndUserAsync(household.Id, userId);
         if (existingMember != null)
         {
