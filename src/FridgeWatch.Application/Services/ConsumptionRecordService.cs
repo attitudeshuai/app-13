@@ -142,7 +142,51 @@ public class ConsumptionRecordService : IConsumptionRecordService
             throw new UnauthorizedAccessException("只能删除自己的消耗记录");
         }
 
-        await _unitOfWork.ConsumptionRecords.DeleteAsync(id);
-        await _unitOfWork.SaveChangesAsync();
+        var foodItem = await _unitOfWork.FoodItems.GetByIdAsync(record.FoodItemId);
+        if (foodItem == null)
+        {
+            throw new BusinessException("对应食材不存在");
+        }
+
+        await _unitOfWork.BeginTransactionAsync();
+        try
+        {
+            await _unitOfWork.ConsumptionRecords.DeleteAsync(id);
+
+            foodItem.Quantity += record.ConsumedQuantity;
+            if (foodItem.Quantity > 0)
+            {
+                foodItem.Status = CalculateStatus(foodItem.ExpiryDate);
+            }
+            foodItem.UpdatedAt = DateTime.UtcNow;
+            await _unitOfWork.FoodItems.UpdateAsync(foodItem);
+
+            await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.CommitTransactionAsync();
+        }
+        catch
+        {
+            await _unitOfWork.RollbackTransactionAsync();
+            throw;
+        }
+    }
+
+    private FoodStatus CalculateStatus(DateTime expiryDate)
+    {
+        var today = DateTime.UtcNow.Date;
+        var daysToExpiry = (expiryDate.Date - today).Days;
+
+        if (daysToExpiry < 0)
+        {
+            return FoodStatus.Expired;
+        }
+        else if (daysToExpiry <= 3)
+        {
+            return FoodStatus.NearExpiry;
+        }
+        else
+        {
+            return FoodStatus.Fresh;
+        }
     }
 }
