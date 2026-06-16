@@ -18,7 +18,7 @@ public class FoodItemsController : ApiControllerBase
 
     [HttpGet]
     public async Task<IActionResult> GetList(
-        [FromQuery] QueryParametersDto parameters,
+        [FromQuery] FoodItemQueryParametersDto parameters,
         [FromQuery] int? householdId = null)
     {
         var result = await _foodItemService.GetListAsync(parameters, householdId);

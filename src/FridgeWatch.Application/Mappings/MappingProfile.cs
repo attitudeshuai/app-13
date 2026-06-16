@@ -42,6 +42,7 @@ public class MappingProfile : Profile
             .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
         CreateMap<QueryParametersDto, QueryParameters>();
+        CreateMap<FoodItemQueryParametersDto, FoodItemQueryParameters>();
         
         CreateMap(typeof(PagedResult<>), typeof(PagedResultDto<>));
     }

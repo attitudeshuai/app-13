@@ -13,15 +13,35 @@ public class FoodItemRepository : Repository<FoodItem, int>, IFoodItemRepository
     {
     }
 
-    public async Task<PagedResult<FoodItem>> GetByHouseholdIdAsync(int householdId, QueryParameters parameters)
+    public async Task<PagedResult<FoodItem>> GetFilteredAsync(FoodItemQueryParameters parameters, int? householdId = null)
     {
-        var query = _dbSet.Where(f => f.HouseholdId == householdId);
+        var query = _dbSet.AsQueryable();
+
+        if (householdId.HasValue)
+        {
+            query = query.Where(f => f.HouseholdId == householdId.Value);
+        }
 
         if (!string.IsNullOrWhiteSpace(parameters.SearchTerm))
         {
             query = query.Where(f =>
                 f.Name.Contains(parameters.SearchTerm) ||
                 f.Category.Contains(parameters.SearchTerm));
+        }
+
+        if (!string.IsNullOrWhiteSpace(parameters.Category))
+        {
+            query = query.Where(f => f.Category == parameters.Category);
+        }
+
+        if (parameters.StorageLocation.HasValue)
+        {
+            query = query.Where(f => f.StorageLocation == parameters.StorageLocation.Value);
+        }
+
+        if (parameters.Status.HasValue)
+        {
+            query = query.Where(f => f.Status == parameters.Status.Value);
         }
 
         if (!string.IsNullOrWhiteSpace(parameters.SortBy))

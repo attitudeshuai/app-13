@@ -19,19 +19,11 @@ public class FoodItemService : IFoodItemService
         _mapper = mapper;
     }
 
-    public async Task<PagedResultDto<FoodItemDto>> GetListAsync(QueryParametersDto parameters, int? householdId = null)
+    public async Task<PagedResultDto<FoodItemDto>> GetListAsync(FoodItemQueryParametersDto parameters, int? householdId = null)
     {
-        var queryParams = _mapper.Map<QueryParameters>(parameters);
+        var queryParams = _mapper.Map<FoodItemQueryParameters>(parameters);
 
-        PagedResult<FoodItem> result;
-        if (householdId.HasValue)
-        {
-            result = await _unitOfWork.FoodItems.GetByHouseholdIdAsync(householdId.Value, queryParams);
-        }
-        else
-        {
-            result = await _unitOfWork.FoodItems.GetPagedAsync(queryParams);
-        }
+        var result = await _unitOfWork.FoodItems.GetFilteredAsync(queryParams, householdId);
 
         return _mapper.Map<PagedResultDto<FoodItemDto>>(result);
     }
