@@ -89,11 +89,11 @@ public class ConsumptionRecordService : IConsumptionRecordService
             await _unitOfWork.ConsumptionRecords.AddAsync(record);
 
             foodItem.Quantity -= dto.ConsumedQuantity;
-            if (foodItem.Quantity <= 0)
+            if (foodItem.Quantity < 0)
             {
-                foodItem.Status = FoodStatus.Consumed;
                 foodItem.Quantity = 0;
             }
+            foodItem.Status = FoodStatusHelper.CalculateStatus(foodItem.ExpiryDate, foodItem.Quantity);
             foodItem.UpdatedAt = DateTime.UtcNow;
             await _unitOfWork.FoodItems.UpdateAsync(foodItem);
 
@@ -154,10 +154,7 @@ public class ConsumptionRecordService : IConsumptionRecordService
             await _unitOfWork.ConsumptionRecords.DeleteAsync(id);
 
             foodItem.Quantity += record.ConsumedQuantity;
-            if (foodItem.Quantity > 0)
-            {
-                foodItem.Status = CalculateStatus(foodItem.ExpiryDate);
-            }
+            foodItem.Status = FoodStatusHelper.CalculateStatus(foodItem.ExpiryDate, foodItem.Quantity);
             foodItem.UpdatedAt = DateTime.UtcNow;
             await _unitOfWork.FoodItems.UpdateAsync(foodItem);
 
@@ -168,25 +165,6 @@ public class ConsumptionRecordService : IConsumptionRecordService
         {
             await _unitOfWork.RollbackTransactionAsync();
             throw;
-        }
-    }
-
-    private FoodStatus CalculateStatus(DateTime expiryDate)
-    {
-        var today = DateTime.UtcNow.Date;
-        var daysToExpiry = (expiryDate.Date - today).Days;
-
-        if (daysToExpiry < 0)
-        {
-            return FoodStatus.Expired;
-        }
-        else if (daysToExpiry <= 3)
-        {
-            return FoodStatus.NearExpiry;
-        }
-        else
-        {
-            return FoodStatus.Fresh;
         }
     }
 }

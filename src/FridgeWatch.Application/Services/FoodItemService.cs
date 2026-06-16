@@ -55,7 +55,7 @@ public class FoodItemService : IFoodItemService
         }
 
         var foodItem = _mapper.Map<FoodItem>(dto);
-        foodItem.Status = CalculateStatus(foodItem.ExpiryDate);
+        foodItem.Status = FoodStatusHelper.CalculateStatus(foodItem.ExpiryDate, foodItem.Quantity);
 
         await _unitOfWork.FoodItems.AddAsync(foodItem);
         await _unitOfWork.SaveChangesAsync();
@@ -82,7 +82,7 @@ public class FoodItemService : IFoodItemService
 
         if (dto.ExpiryDate.HasValue)
         {
-            foodItem.Status = CalculateStatus(dto.ExpiryDate.Value);
+            foodItem.Status = FoodStatusHelper.CalculateStatus(dto.ExpiryDate.Value, foodItem.Quantity);
         }
 
         await _unitOfWork.FoodItems.UpdateAsync(foodItem);
@@ -129,25 +129,6 @@ public class FoodItemService : IFoodItemService
         await _unitOfWork.SaveChangesAsync();
 
         return _mapper.Map<FoodItemDto>(foodItem);
-    }
-
-    private FoodStatus CalculateStatus(DateTime expiryDate)
-    {
-        var today = DateTime.UtcNow.Date;
-        var daysToExpiry = (expiryDate.Date - today).Days;
-
-        if (daysToExpiry < 0)
-        {
-            return FoodStatus.Expired;
-        }
-        else if (daysToExpiry <= 3)
-        {
-            return FoodStatus.NearExpiry;
-        }
-        else
-        {
-            return FoodStatus.Fresh;
-        }
     }
 
     private async Task CheckAndSyncAlertsAsync(FoodItem foodItem)
