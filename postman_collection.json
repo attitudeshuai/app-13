@@ -1,0 +1,745 @@
+{
+  "info": {
+    "name": "FridgeWatch API Collection",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "FridgeWatch - 家庭冰箱食材保质期预警系统 API 测试集合"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8083",
+      "type": "string"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "aliceToken",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "健康检查",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["health"]
+        }
+      }
+    },
+    {
+      "name": "认证模块",
+      "item": [
+        {
+          "name": "注册 - admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('注册成功', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.code).to.eql(200);",
+                  "  pm.environment.set('adminToken', jsonData.data.token);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"email\": \"admin@example.com\",\n  \"password\": \"Admin@123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "登录 - admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('登录成功', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.code).to.eql(200);",
+                  "  pm.environment.set('adminToken', jsonData.data.token);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usernameOrEmail\": \"admin\",\n  \"password\": \"Admin@123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "登录 - alice",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('登录成功', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.code).to.eql(200);",
+                  "  pm.environment.set('aliceToken', jsonData.data.token);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usernameOrEmail\": \"alice\",\n  \"password\": \"Alice@123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "获取当前用户信息",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "me"]
+            }
+          }
+        },
+        {
+          "name": "更新个人信息",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"avatar\": \"https://api.dicebear.com/7.x/avataaars/svg?seed=admin_new\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "me"]
+            }
+          }
+        },
+        {
+          "name": "未登录访问受限资源 - 应返回401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('返回401未授权', function() {",
+                  "  pm.response.to.have.status(401);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "me"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "家庭管理",
+      "item": [
+        {
+          "name": "获取家庭列表",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/households?pageNumber=1&pageSize=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "households"],
+              "query": [
+                {
+                  "key": "pageNumber",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "搜索家庭",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/households?searchTerm=温馨",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "households"],
+              "query": [
+                {
+                  "key": "searchTerm",
+                  "value": "温馨"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "创建家庭",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('创建成功', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.code).to.eql(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"测试家庭\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/households",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "households"]
+            }
+          }
+        },
+        {
+          "name": "获取家庭详情",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/households/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "households", "1"]
+            }
+          }
+        },
+        {
+          "name": "更新家庭",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"温馨小窝(已更新)\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/households/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "households", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "食材管理",
+      "item": [
+        {
+          "name": "获取食材列表",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/fooditems?householdId=1&pageNumber=1&pageSize=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fooditems"],
+              "query": [
+                {
+                  "key": "householdId",
+                  "value": "1"
+                },
+                {
+                  "key": "pageNumber",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "搜索食材",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/fooditems?householdId=1&searchTerm=牛奶",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fooditems"],
+              "query": [
+                {
+                  "key": "householdId",
+                  "value": "1"
+                },
+                {
+                  "key": "searchTerm",
+                  "value": "牛奶"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "按过期时间排序",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/fooditems?householdId=1&sortBy=expirydate&sortDescending=false",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fooditems"],
+              "query": [
+                {
+                  "key": "householdId",
+                  "value": "1"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "expirydate"
+                },
+                {
+                  "key": "sortDescending",
+                  "value": "false"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "添加食材",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('添加成功', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.code).to.eql(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"householdId\": 1,\n  \"name\": \"测试食材\",\n  \"category\": \"测试分类\",\n  \"storageLocation\": 1,\n  \"purchaseDate\": \"2024-01-01T00:00:00Z\",\n  \"expiryDate\": \"2024-01-10T00:00:00Z\",\n  \"quantity\": 10,\n  \"unit\": \"个\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/fooditems",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fooditems"]
+            }
+          }
+        },
+        {
+          "name": "获取食材详情",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/fooditems/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fooditems", "1"]
+            }
+          }
+        },
+        {
+          "name": "更新食材",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 5\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/fooditems/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fooditems", "1"]
+            }
+          }
+        },
+        {
+          "name": "修改食材状态",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": 4\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/fooditems/1/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fooditems", "1", "status"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "提醒管理",
+      "item": [
+        {
+          "name": "获取我的提醒",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/expiryalerts/mine",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "expiryalerts", "mine"]
+            }
+          }
+        },
+        {
+          "name": "未读提醒数量",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/expiryalerts/unread-count",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "expiryalerts", "unread-count"]
+            }
+          }
+        },
+        {
+          "name": "标记提醒为已读",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/expiryalerts/1/read",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "expiryalerts", "1", "read"]
+            }
+          }
+        },
+        {
+          "name": "全部标记为已读",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/expiryalerts/read-all",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "expiryalerts", "read-all"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "消耗记录",
+      "item": [
+        {
+          "name": "获取我的消耗记录",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/consumptionrecords/mine",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "consumptionrecords", "mine"]
+            }
+          }
+        },
+        {
+          "name": "记录消耗",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('记录成功', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.code).to.eql(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"foodItemId\": 2,\n  \"consumedQuantity\": 1,\n  \"note\": \"测试消耗\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/consumptionrecords",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "consumptionrecords"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "统计分析",
+      "item": [
+        {
+          "name": "获取总览统计",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/stats/overview?householdId=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "stats", "overview"],
+              "query": [
+                {
+                  "key": "householdId",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "获取趋势统计",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/stats/trend?startDate=2024-01-01&endDate=2024-01-31&householdId=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "stats", "trend"],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "2024-01-01"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2024-01-31"
+                },
+                {
+                  "key": "householdId",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
