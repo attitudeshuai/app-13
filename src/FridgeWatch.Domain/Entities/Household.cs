@@ -11,4 +11,5 @@ public class Household : BaseEntity<int>
 
     public virtual ICollection<HouseholdMember> HouseholdMembers { get; set; } = new List<HouseholdMember>();
     public virtual ICollection<FoodItem> FoodItems { get; set; } = new List<FoodItem>();
+    public virtual ICollection<ShoppingList> ShoppingLists { get; set; } = new List<ShoppingList>();
 }

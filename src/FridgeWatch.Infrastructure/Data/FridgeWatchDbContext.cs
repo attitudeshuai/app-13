@@ -16,6 +16,8 @@ public class FridgeWatchDbContext : DbContext
     public DbSet<FoodItem> FoodItems { get; set; }
     public DbSet<ExpiryAlert> ExpiryAlerts { get; set; }
     public DbSet<ConsumptionRecord> ConsumptionRecords { get; set; }
+    public DbSet<ShoppingList> ShoppingLists { get; set; }
+    public DbSet<ShoppingListItem> ShoppingListItems { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -94,6 +96,30 @@ public class FridgeWatchDbContext : DbContext
                   .OnDelete(DeleteBehavior.Cascade);
             entity.Property(cr => cr.ConsumedQuantity).HasColumnType("decimal(18,2)");
             entity.Property(cr => cr.Note).HasMaxLength(500);
+        });
+
+        // ShoppingList 配置
+        modelBuilder.Entity<ShoppingList>(entity =>
+        {
+            entity.HasOne(sl => sl.Household)
+                  .WithMany(h => h.ShoppingLists)
+                  .HasForeignKey(sl => sl.HouseholdId)
+                  .OnDelete(DeleteBehavior.Cascade);
+            entity.Property(sl => sl.Name).IsRequired().HasMaxLength(100);
+        });
+
+        // ShoppingListItem 配置
+        modelBuilder.Entity<ShoppingListItem>(entity =>
+        {
+            entity.HasOne(sli => sli.ShoppingList)
+                  .WithMany(sl => sl.Items)
+                  .HasForeignKey(sli => sli.ShoppingListId)
+                  .OnDelete(DeleteBehavior.Cascade);
+            entity.Property(sli => sli.Name).IsRequired().HasMaxLength(100);
+            entity.Property(sli => sli.Category).IsRequired().HasMaxLength(50);
+            entity.Property(sli => sli.Unit).IsRequired().HasMaxLength(20);
+            entity.Property(sli => sli.Quantity).HasColumnType("decimal(18,2)");
+            entity.Property(sli => sli.Notes).HasMaxLength(500);
         });
     }
 }

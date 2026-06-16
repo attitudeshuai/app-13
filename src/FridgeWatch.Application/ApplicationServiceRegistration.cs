@@ -20,6 +20,7 @@ public static class ApplicationServiceRegistration
         services.AddScoped<IExpiryAlertService, ExpiryAlertService>();
         services.AddScoped<IConsumptionRecordService, ConsumptionRecordService>();
         services.AddScoped<IStatsService, StatsService>();
+        services.AddScoped<IShoppingListService, ShoppingListService>();
 
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 

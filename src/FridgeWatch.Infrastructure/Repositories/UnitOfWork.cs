@@ -16,6 +16,8 @@ public class UnitOfWork : IUnitOfWork
     public IFoodItemRepository FoodItems { get; private set; }
     public IExpiryAlertRepository ExpiryAlerts { get; private set; }
     public IConsumptionRecordRepository ConsumptionRecords { get; private set; }
+    public IShoppingListRepository ShoppingLists { get; private set; }
+    public IShoppingListItemRepository ShoppingListItems { get; private set; }
 
     public UnitOfWork(FridgeWatchDbContext context)
     {
@@ -26,6 +28,8 @@ public class UnitOfWork : IUnitOfWork
         FoodItems = new FoodItemRepository(context);
         ExpiryAlerts = new ExpiryAlertRepository(context);
         ConsumptionRecords = new ConsumptionRecordRepository(context);
+        ShoppingLists = new ShoppingListRepository(context);
+        ShoppingListItems = new ShoppingListItemRepository(context);
     }
 
     public async Task<int> SaveChangesAsync()

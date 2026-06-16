@@ -45,5 +45,17 @@ public class MappingProfile : Profile
         CreateMap<FoodItemQueryParametersDto, FoodItemQueryParameters>();
         
         CreateMap(typeof(PagedResult<>), typeof(PagedResultDto<>));
+
+        CreateMap<ShoppingList, ShoppingListDto>()
+            .ForMember(dest => dest.ItemCount, opt => opt.MapFrom(src => src.Items.Count))
+            .ForMember(dest => dest.PurchasedCount, opt => opt.MapFrom(src => src.Items.Count(i => i.IsPurchased)));
+        CreateMap<ShoppingListCreateDto, ShoppingList>();
+        CreateMap<ShoppingListUpdateDto, ShoppingList>()
+            .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
+        CreateMap<ShoppingListItem, ShoppingListItemDto>();
+        CreateMap<ShoppingListItemCreateDto, ShoppingListItem>();
+        CreateMap<ShoppingListItemUpdateDto, ShoppingListItem>()
+            .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
     }
 }

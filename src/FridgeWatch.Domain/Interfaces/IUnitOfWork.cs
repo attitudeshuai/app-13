@@ -8,6 +8,8 @@ public interface IUnitOfWork : IDisposable
     IFoodItemRepository FoodItems { get; }
     IExpiryAlertRepository ExpiryAlerts { get; }
     IConsumptionRecordRepository ConsumptionRecords { get; }
+    IShoppingListRepository ShoppingLists { get; }
+    IShoppingListItemRepository ShoppingListItems { get; }
 
     Task<int> SaveChangesAsync();
     Task BeginTransactionAsync();
