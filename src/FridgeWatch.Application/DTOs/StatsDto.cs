@@ -1,5 +1,20 @@
 namespace FridgeWatch.Application.DTOs;
 
+public enum TimeRangeType
+{
+    Custom,
+    Last7Days,
+    Last30Days
+}
+
+public class StatsOverviewQueryDto
+{
+    public int? HouseholdId { get; set; }
+    public TimeRangeType TimeRange { get; set; } = TimeRangeType.Last7Days;
+    public DateTime? StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
+}
+
 public class StatsOverviewDto
 {
     public int TotalHouseholds { get; set; }
@@ -41,7 +56,8 @@ public class StatsTrendDto
 
 public class StatsTrendQueryDto : QueryParametersDto
 {
-    public DateTime StartDate { get; set; }
-    public DateTime EndDate { get; set; }
+    public TimeRangeType TimeRange { get; set; } = TimeRangeType.Last7Days;
+    public DateTime? StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
     public int? HouseholdId { get; set; }
 }

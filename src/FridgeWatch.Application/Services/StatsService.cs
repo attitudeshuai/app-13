@@ -19,15 +19,31 @@ public class StatsService : IStatsService
         _mapper = mapper;
     }
 
-    public async Task<StatsOverviewDto> GetOverviewAsync(int? householdId = null, int? userId = null)
+    private static (DateTime StartDate, DateTime EndDate) ResolveDateRange(TimeRangeType timeRange, DateTime? startDate, DateTime? endDate)
+    {
+        var today = DateTime.Today;
+
+        return timeRange switch
+        {
+            TimeRangeType.Last7Days => (today.AddDays(-6), today),
+            TimeRangeType.Last30Days => (today.AddDays(-29), today),
+            TimeRangeType.Custom => (startDate ?? today.AddDays(-6), endDate ?? today),
+            _ => (today.AddDays(-6), today)
+        };
+    }
+
+    public async Task<StatsOverviewDto> GetOverviewAsync(StatsOverviewQueryDto query, int? userId = null)
     {
         var result = new StatsOverviewDto();
+        var (startDate, endDate) = ResolveDateRange(query.TimeRange, query.StartDate, query.EndDate);
+        var startDateUtc = startDate.Date;
+        var endDateUtc = endDate.Date.AddDays(1);
 
         List<int> householdIds = new();
 
-        if (householdId.HasValue)
+        if (query.HouseholdId.HasValue)
         {
-            householdIds.Add(householdId.Value);
+            householdIds.Add(query.HouseholdId.Value);
         }
         else if (userId.HasValue)
         {
@@ -46,10 +62,16 @@ public class StatsService : IStatsService
 
             foreach (var hId in householdIds)
             {
-                var foodItems = await _unitOfWork.FoodItems.FindAsync(f => f.HouseholdId == hId);
+                var foodItems = await _unitOfWork.FoodItems.FindAsync(f =>
+                    f.HouseholdId == hId &&
+                    f.CreatedAt >= startDateUtc &&
+                    f.CreatedAt < endDateUtc);
                 allFoodItems.AddRange(foodItems);
 
-                var records = await _unitOfWork.ConsumptionRecords.FindAsync(c => c.FoodItem!.HouseholdId == hId);
+                var records = await _unitOfWork.ConsumptionRecords.FindAsync(c =>
+                    c.FoodItem!.HouseholdId == hId &&
+                    c.ConsumedAt >= startDateUtc &&
+                    c.ConsumedAt < endDateUtc);
                 allConsumptionRecords.AddRange(records);
             }
 
@@ -80,11 +102,20 @@ public class StatsService : IStatsService
         else
         {
             result.TotalHouseholds = await _unitOfWork.Households.CountAsync(h => true);
-            result.TotalFoodItems = await _unitOfWork.FoodItems.CountAsync(f => true);
-            result.FreshCount = await _unitOfWork.FoodItems.CountAsync(f => f.Status == FoodStatus.Fresh);
-            result.NearExpiryCount = await _unitOfWork.FoodItems.CountAsync(f => f.Status == FoodStatus.NearExpiry);
-            result.ExpiredCount = await _unitOfWork.FoodItems.CountAsync(f => f.Status == FoodStatus.Expired);
-            result.ConsumedCount = await _unitOfWork.FoodItems.CountAsync(f => f.Status == FoodStatus.Consumed);
+
+            var foodItemsInRange = await _unitOfWork.FoodItems.FindAsync(f =>
+                f.CreatedAt >= startDateUtc &&
+                f.CreatedAt < endDateUtc);
+            result.TotalFoodItems = foodItemsInRange.Count;
+            result.FreshCount = foodItemsInRange.Count(f => f.Status == FoodStatus.Fresh);
+            result.NearExpiryCount = foodItemsInRange.Count(f => f.Status == FoodStatus.NearExpiry);
+            result.ExpiredCount = foodItemsInRange.Count(f => f.Status == FoodStatus.Expired);
+            result.ConsumedCount = foodItemsInRange.Count(f => f.Status == FoodStatus.Consumed);
+
+            var recordsInRange = await _unitOfWork.ConsumptionRecords.FindAsync(c =>
+                c.ConsumedAt >= startDateUtc &&
+                c.ConsumedAt < endDateUtc);
+            result.TotalConsumedQuantity = recordsInRange.Sum(c => c.ConsumedQuantity);
         }
 
         return result;
@@ -93,9 +124,10 @@ public class StatsService : IStatsService
     public async Task<StatsTrendDto> GetTrendAsync(StatsTrendQueryDto query, int? userId = null)
     {
         var result = new StatsTrendDto();
+        var (resolvedStart, resolvedEnd) = ResolveDateRange(query.TimeRange, query.StartDate, query.EndDate);
 
-        var startDate = query.StartDate.Date;
-        var endDate = query.EndDate.Date;
+        var startDate = resolvedStart.Date;
+        var endDate = resolvedEnd.Date;
 
         List<int> householdIds = new();
 

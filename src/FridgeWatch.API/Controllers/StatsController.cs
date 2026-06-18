@@ -17,10 +17,10 @@ public class StatsController : ApiControllerBase
     }
 
     [HttpGet("overview")]
-    public async Task<IActionResult> GetOverview([FromQuery] int? householdId = null)
+    public async Task<IActionResult> GetOverview([FromQuery] StatsOverviewQueryDto query)
     {
         var userId = GetCurrentUserId();
-        var result = await _statsService.GetOverviewAsync(householdId, userId);
+        var result = await _statsService.GetOverviewAsync(query, userId);
         return Success(result, "获取成功");
     }
 
