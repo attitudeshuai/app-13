@@ -31,4 +31,12 @@ public class StatsController : ApiControllerBase
         var result = await _statsService.GetTrendAsync(query, userId);
         return Success(result, "获取成功");
     }
+
+    [HttpGet("member-activity")]
+    public async Task<IActionResult> GetMemberActivity([FromQuery] MemberActivityQueryDto query)
+    {
+        var userId = GetCurrentUserId();
+        var result = await _statsService.GetMemberActivityAsync(query, userId);
+        return Success(result, "获取成功");
+    }
 }

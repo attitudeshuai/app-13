@@ -61,3 +61,23 @@ public class StatsTrendQueryDto : QueryParametersDto
     public DateTime? EndDate { get; set; }
     public int? HouseholdId { get; set; }
 }
+
+public class MemberActivityQueryDto
+{
+    public int HouseholdId { get; set; }
+    public TimeRangeType TimeRange { get; set; } = TimeRangeType.Last7Days;
+    public DateTime? StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
+}
+
+public class MemberActivityStatsDto
+{
+    public int UserId { get; set; }
+    public string Username { get; set; } = string.Empty;
+    public string? Avatar { get; set; }
+    public int AddedFoodCount { get; set; }
+    public int ConsumptionCount { get; set; }
+    public int HandledAlertsCount { get; set; }
+    public DateTime? LastActiveAt { get; set; }
+    public int TotalActivities => AddedFoodCount + ConsumptionCount + HandledAlertsCount;
+}

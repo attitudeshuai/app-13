@@ -197,6 +197,7 @@ public static class DbSeeder
             new FoodItem
             {
                 HouseholdId = 1,
+                CreatedByUserId = 1,
                 Name = "有机牛奶",
                 Category = "乳制品",
                 StorageLocation = StorageLocation.Fridge,
@@ -211,6 +212,7 @@ public static class DbSeeder
             new FoodItem
             {
                 HouseholdId = 1,
+                CreatedByUserId = 2,
                 Name = "土鸡蛋",
                 Category = "蛋类",
                 StorageLocation = StorageLocation.Fridge,
@@ -225,6 +227,7 @@ public static class DbSeeder
             new FoodItem
             {
                 HouseholdId = 1,
+                CreatedByUserId = 1,
                 Name = "草莓",
                 Category = "水果",
                 StorageLocation = StorageLocation.Fridge,
@@ -239,6 +242,7 @@ public static class DbSeeder
             new FoodItem
             {
                 HouseholdId = 1,
+                CreatedByUserId = 2,
                 Name = "鸡胸肉",
                 Category = "肉类",
                 StorageLocation = StorageLocation.Freezer,
@@ -253,6 +257,7 @@ public static class DbSeeder
             new FoodItem
             {
                 HouseholdId = 1,
+                CreatedByUserId = 1,
                 Name = "西红柿",
                 Category = "蔬菜",
                 StorageLocation = StorageLocation.Pantry,
@@ -267,6 +272,7 @@ public static class DbSeeder
             new FoodItem
             {
                 HouseholdId = 2,
+                CreatedByUserId = 2,
                 Name = "酸奶",
                 Category = "乳制品",
                 StorageLocation = StorageLocation.Fridge,
@@ -281,6 +287,7 @@ public static class DbSeeder
             new FoodItem
             {
                 HouseholdId = 2,
+                CreatedByUserId = 3,
                 Name = "全麦面包",
                 Category = "主食",
                 StorageLocation = StorageLocation.Pantry,
@@ -295,6 +302,7 @@ public static class DbSeeder
             new FoodItem
             {
                 HouseholdId = 2,
+                CreatedByUserId = 5,
                 Name = "速冻饺子",
                 Category = "速冻食品",
                 StorageLocation = StorageLocation.Freezer,
@@ -309,6 +317,7 @@ public static class DbSeeder
             new FoodItem
             {
                 HouseholdId = 3,
+                CreatedByUserId = 4,
                 Name = "三文鱼",
                 Category = "海鲜",
                 StorageLocation = StorageLocation.Fridge,
@@ -323,6 +332,7 @@ public static class DbSeeder
             new FoodItem
             {
                 HouseholdId = 3,
+                CreatedByUserId = 1,
                 Name = "苹果",
                 Category = "水果",
                 StorageLocation = StorageLocation.Fridge,
@@ -369,9 +379,10 @@ public static class DbSeeder
                 FoodItemId = 5,
                 UserId = 1,
                 AlertType = AlertType.NearExpiry,
-                AlertDate = today,
+                AlertDate = today.AddDays(-1),
                 IsRead = true,
-                CreatedAt = today
+                CreatedAt = today.AddDays(-1),
+                UpdatedAt = today.AddHours(-5)
             },
             new ExpiryAlert
             {

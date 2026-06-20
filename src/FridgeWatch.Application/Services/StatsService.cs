@@ -192,4 +192,85 @@ public class StatsService : IStatsService
 
         return result;
     }
+
+    public async Task<List<MemberActivityStatsDto>> GetMemberActivityAsync(MemberActivityQueryDto query, int? userId = null)
+    {
+        var (startDate, endDate) = ResolveDateRange(query.TimeRange, query.StartDate, query.EndDate);
+        var startDateUtc = startDate.Date;
+        var endDateUtc = endDate.Date.AddDays(1);
+
+        if (userId.HasValue)
+        {
+            var isMember = await _unitOfWork.HouseholdMembers.IsHouseholdMemberAsync(query.HouseholdId, userId.Value);
+            if (!isMember)
+            {
+                throw new UnauthorizedAccessException("您不是该家庭的成员，无法查看成员活跃度统计");
+            }
+        }
+
+        var householdMembers = await _unitOfWork.HouseholdMembers.FindAsync(m => m.HouseholdId == query.HouseholdId);
+
+        var result = new List<MemberActivityStatsDto>();
+
+        foreach (var member in householdMembers)
+        {
+            var user = await _unitOfWork.Users.GetByIdAsync(member.UserId);
+            if (user == null) continue;
+
+            var addedFoodItems = await _unitOfWork.FoodItems.FindAsync(f =>
+                f.HouseholdId == query.HouseholdId &&
+                f.CreatedByUserId == member.UserId &&
+                f.CreatedAt >= startDateUtc &&
+                f.CreatedAt < endDateUtc);
+
+            var consumptionRecords = await _unitOfWork.ConsumptionRecords.FindAsync(c =>
+                c.FoodItem!.HouseholdId == query.HouseholdId &&
+                c.UserId == member.UserId &&
+                c.ConsumedAt >= startDateUtc &&
+                c.ConsumedAt < endDateUtc);
+
+            var handledAlerts = await _unitOfWork.ExpiryAlerts.FindAsync(a =>
+                a.FoodItem!.HouseholdId == query.HouseholdId &&
+                a.UserId == member.UserId &&
+                a.IsRead &&
+                a.UpdatedAt >= startDateUtc &&
+                a.UpdatedAt < endDateUtc);
+
+            DateTime? lastActiveAt = null;
+
+            if (addedFoodItems.Any())
+            {
+                var latestFood = addedFoodItems.Max(f => f.CreatedAt);
+                if (lastActiveAt == null || latestFood > lastActiveAt)
+                    lastActiveAt = latestFood;
+            }
+
+            if (consumptionRecords.Any())
+            {
+                var latestConsumption = consumptionRecords.Max(c => c.ConsumedAt);
+                if (lastActiveAt == null || latestConsumption > lastActiveAt)
+                    lastActiveAt = latestConsumption;
+            }
+
+            if (handledAlerts.Any())
+            {
+                var latestAlert = handledAlerts.Max(a => a.UpdatedAt);
+                if (lastActiveAt == null || latestAlert > lastActiveAt)
+                    lastActiveAt = latestAlert;
+            }
+
+            result.Add(new MemberActivityStatsDto
+            {
+                UserId = member.UserId,
+                Username = user.Username,
+                Avatar = user.Avatar,
+                AddedFoodCount = addedFoodItems.Count,
+                ConsumptionCount = consumptionRecords.Count,
+                HandledAlertsCount = handledAlerts.Count,
+                LastActiveAt = lastActiveAt
+            });
+        }
+
+        return result.OrderByDescending(x => x.TotalActivities).ToList();
+    }
 }

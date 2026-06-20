@@ -50,6 +50,7 @@ public class FoodItemService : IFoodItemService
         }
 
         var foodItem = _mapper.Map<FoodItem>(dto);
+        foodItem.CreatedByUserId = userId;
         foodItem.Status = FoodStatusHelper.CalculateStatus(foodItem.ExpiryDate, foodItem.Quantity);
 
         await _unitOfWork.FoodItems.AddAsync(foodItem);
@@ -195,6 +196,7 @@ public class FoodItemService : IFoodItemService
                 else
                 {
                     var foodItem = _mapper.Map<FoodItem>(createDto);
+                    foodItem.CreatedByUserId = userId;
                     foodItem.Status = FoodStatusHelper.CalculateStatus(foodItem.ExpiryDate, foodItem.Quantity);
                     await _unitOfWork.FoodItems.AddAsync(foodItem);
                     existingItems.Add(foodItem);

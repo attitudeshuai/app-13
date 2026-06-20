@@ -6,6 +6,7 @@ namespace FridgeWatch.Domain.Entities;
 public class FoodItem : BaseEntity<int>
 {
     public int HouseholdId { get; set; }
+    public int CreatedByUserId { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Category { get; set; } = string.Empty;
     public StorageLocation StorageLocation { get; set; }
@@ -17,6 +18,7 @@ public class FoodItem : BaseEntity<int>
     public FoodStatus Status { get; set; } = FoodStatus.Fresh;
 
     public virtual Household? Household { get; set; }
+    public virtual User? CreatedByUser { get; set; }
     public virtual ICollection<ExpiryAlert> ExpiryAlerts { get; set; } = new List<ExpiryAlert>();
     public virtual ICollection<ConsumptionRecord> ConsumptionRecords { get; set; } = new List<ConsumptionRecord>();
 }

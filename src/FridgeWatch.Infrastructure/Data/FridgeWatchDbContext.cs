@@ -66,6 +66,10 @@ public class FridgeWatchDbContext : DbContext
                   .WithMany(h => h.FoodItems)
                   .HasForeignKey(f => f.HouseholdId)
                   .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(f => f.CreatedByUser)
+                  .WithMany()
+                  .HasForeignKey(f => f.CreatedByUserId)
+                  .OnDelete(DeleteBehavior.Restrict);
             entity.Property(f => f.Name).IsRequired().HasMaxLength(100);
             entity.Property(f => f.Category).IsRequired().HasMaxLength(50);
             entity.Property(f => f.Unit).IsRequired().HasMaxLength(20);

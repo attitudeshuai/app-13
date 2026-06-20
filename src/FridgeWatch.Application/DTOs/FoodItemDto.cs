@@ -6,6 +6,7 @@ public class FoodItemDto
 {
     public int Id { get; set; }
     public int HouseholdId { get; set; }
+    public int CreatedByUserId { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Category { get; set; } = string.Empty;
     public StorageLocation StorageLocation { get; set; }
