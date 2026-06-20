@@ -12,4 +12,6 @@ public interface IFoodItemService
     Task<FoodItemDto> UpdateAsync(int id, FoodItemUpdateDto dto, int userId);
     Task DeleteAsync(int id, int userId);
     Task<FoodItemDto> UpdateStatusAsync(int id, FoodStatus status, int userId);
+    Task<FoodItemImportResultDto> BulkImportAsync(int householdId, Stream fileStream, string fileName, int userId);
+    Task<byte[]> DownloadTemplateAsync();
 }

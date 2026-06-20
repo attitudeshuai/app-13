@@ -63,4 +63,26 @@ public class FoodItemsController : ApiControllerBase
         var result = await _foodItemService.UpdateStatusAsync(id, dto.Status, userId);
         return Success(result, "状态更新成功");
     }
+
+    [HttpGet("template")]
+    [AllowAnonymous]
+    public async Task<IActionResult> DownloadTemplate()
+    {
+        var templateBytes = await _foodItemService.DownloadTemplateAsync();
+        var fileName = "食材批量导入模板.xlsx";
+        var contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+        return File(templateBytes, contentType, fileName);
+    }
+
+    [HttpPost("import")]
+    public async Task<IActionResult> BulkImport(
+        [FromQuery] int householdId,
+        IFormFile file)
+    {
+        var userId = GetCurrentUserId();
+        using var stream = new MemoryStream();
+        await file.CopyToAsync(stream);
+        var result = await _foodItemService.BulkImportAsync(householdId, stream, file.FileName, userId);
+        return Success(result, $"导入完成：新增 {result.CreatedCount} 条，更新 {result.UpdatedCount} 条，失败 {result.FailedCount} 条");
+    }
 }

@@ -48,3 +48,31 @@ public class FoodItemStatusUpdateDto
 {
     public FoodStatus Status { get; set; }
 }
+
+public class FoodItemImportRowDto
+{
+    public int RowNumber { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string Category { get; set; } = string.Empty;
+    public string StorageLocation { get; set; } = string.Empty;
+    public string PurchaseDate { get; set; } = string.Empty;
+    public string ExpiryDate { get; set; } = string.Empty;
+    public string Quantity { get; set; } = string.Empty;
+    public string Unit { get; set; } = string.Empty;
+}
+
+public class FoodItemImportResultDto
+{
+    public int TotalRows { get; set; }
+    public int CreatedCount { get; set; }
+    public int UpdatedCount { get; set; }
+    public int FailedCount { get; set; }
+    public List<FoodItemImportErrorDto> Errors { get; set; } = new();
+    public List<FoodItemDto> ImportedItems { get; set; } = new();
+}
+
+public class FoodItemImportErrorDto
+{
+    public int RowNumber { get; set; }
+    public string ErrorMessage { get; set; } = string.Empty;
+}
