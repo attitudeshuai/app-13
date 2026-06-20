@@ -22,6 +22,11 @@ public class FoodItemRepository : Repository<FoodItem, int>, IFoodItemRepository
             query = query.Where(f => f.HouseholdId == householdId.Value);
         }
 
+        if (!parameters.IncludeArchived)
+        {
+            query = query.Where(f => f.Status != FoodStatus.Archived);
+        }
+
         if (!string.IsNullOrWhiteSpace(parameters.SearchTerm))
         {
             query = query.Where(f =>
@@ -88,7 +93,8 @@ public class FoodItemRepository : Repository<FoodItem, int>, IFoodItemRepository
         return await _dbSet
             .Where(f => f.ExpiryDate < today &&
                         f.Status != FoodStatus.Consumed &&
-                        f.Status != FoodStatus.Expired)
+                        f.Status != FoodStatus.Expired &&
+                        f.Status != FoodStatus.Archived)
             .OrderBy(f => f.ExpiryDate)
             .ToListAsync();
     }
@@ -102,6 +108,39 @@ public class FoodItemRepository : Repository<FoodItem, int>, IFoodItemRepository
             foodItem.UpdatedAt = DateTime.UtcNow;
             _dbSet.Update(foodItem);
         }
+    }
+
+    public async Task<List<FoodItem>> GetToArchiveAsync(int autoArchiveDays)
+    {
+        var today = DateTime.UtcNow.Date;
+        var archiveThreshold = today.AddDays(-autoArchiveDays);
+
+        return await _dbSet
+            .Where(f => f.ExpiryDate <= archiveThreshold &&
+                        f.Status != FoodStatus.Consumed &&
+                        f.Status != FoodStatus.Archived)
+            .OrderBy(f => f.ExpiryDate)
+            .ToListAsync();
+    }
+
+    public async Task<int> ArchiveExpiredAsync(int autoArchiveDays)
+    {
+        var today = DateTime.UtcNow.Date;
+        var archiveThreshold = today.AddDays(-autoArchiveDays);
+
+        var itemsToArchive = await _dbSet
+            .Where(f => f.ExpiryDate <= archiveThreshold &&
+                        f.Status != FoodStatus.Consumed &&
+                        f.Status != FoodStatus.Archived)
+            .ToListAsync();
+
+        foreach (var item in itemsToArchive)
+        {
+            item.Status = FoodStatus.Archived;
+            item.UpdatedAt = DateTime.UtcNow;
+        }
+
+        return itemsToArchive.Count;
     }
 
     protected override IQueryable<FoodItem> ApplySearch(IQueryable<FoodItem> query, string searchTerm)

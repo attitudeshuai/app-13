@@ -111,4 +111,30 @@ public class FoodItemsController : ApiControllerBase
         var result = await _foodItemService.BulkImportAsync(householdId, stream, file.FileName, userId);
         return Success(result, $"导入完成：新增 {result.CreatedCount} 条，更新 {result.UpdatedCount} 条，失败 {result.FailedCount} 条");
     }
+
+    [HttpGet("history")]
+    public async Task<IActionResult> GetHistory(
+        [FromQuery] FoodItemQueryParametersDto parameters,
+        [FromQuery] int? householdId = null)
+    {
+        var userId = GetCurrentUserId();
+        var result = await _foodItemService.GetHistoryAsync(parameters, householdId, userId);
+        return Success(result, "获取成功");
+    }
+
+    [HttpPost("{id}/restore")]
+    public async Task<IActionResult> RestoreFromArchive(int id)
+    {
+        var userId = GetCurrentUserId();
+        var result = await _foodItemService.RestoreFromArchiveAsync(id, userId);
+        return Success(result, "恢复成功");
+    }
+
+    [HttpDelete("{id}/permanent")]
+    public async Task<IActionResult> PermanentDelete(int id)
+    {
+        var userId = GetCurrentUserId();
+        await _foodItemService.PermanentDeleteAsync(id, userId);
+        return Success("彻底删除成功");
+    }
 }

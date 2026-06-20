@@ -9,6 +9,7 @@ public class HouseholdDto
     public int CreatedBy { get; set; }
     public DateTime CreatedAt { get; set; }
     public int MemberCount { get; set; }
+    public int AutoArchiveDays { get; set; }
 }
 
 public class HouseholdCreateDto
@@ -19,6 +20,7 @@ public class HouseholdCreateDto
 public class HouseholdUpdateDto
 {
     public string? Name { get; set; }
+    public int? AutoArchiveDays { get; set; }
 }
 
 public class ResetInviteCodeDto

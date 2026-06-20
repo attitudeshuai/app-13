@@ -89,6 +89,7 @@ public class ExpiryAlertBackgroundService : BackgroundService
         {
             using var scope = _serviceScopeFactory.CreateScope();
             var syncService = scope.ServiceProvider.GetRequiredService<IExpiryAlertSyncService>();
+            var foodItemService = scope.ServiceProvider.GetRequiredService<IFoodItemService>();
 
             var result = await syncService.ScanAndSyncAllAlertsAsync();
 
@@ -102,6 +103,10 @@ public class ExpiryAlertBackgroundService : BackgroundService
                 result.ExpiredAlertsCreated,
                 result.AlertsRemoved,
                 (result.ScanEndTime - result.ScanStartTime).TotalSeconds.ToString("F2"));
+
+            _logger.LogInformation("开始执行过期食材自动归档...");
+            var archivedCount = await foodItemService.AutoArchiveAsync();
+            _logger.LogInformation("过期食材自动归档完成：共归档 {Archived} 个食材", archivedCount);
         }
         catch (Exception ex)
         {

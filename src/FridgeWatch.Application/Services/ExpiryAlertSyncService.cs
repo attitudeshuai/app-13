@@ -84,7 +84,7 @@ public class ExpiryAlertSyncService : IExpiryAlertSyncService
         var alertsRemoved = 0;
         var alertsKept = 0;
 
-        if (foodItem.Status == FoodStatus.Consumed)
+        if (foodItem.Status == FoodStatus.Consumed || foodItem.Status == FoodStatus.Archived)
         {
             var removed = await RemoveAllSystemAlertsForFoodItemAsync(foodItem.Id);
             alertsRemoved += removed;
@@ -92,7 +92,7 @@ public class ExpiryAlertSyncService : IExpiryAlertSyncService
         }
 
         var newStatus = FoodStatusHelper.CalculateStatus(foodItem.ExpiryDate, foodItem.Quantity);
-        if (newStatus != foodItem.Status && foodItem.Status != FoodStatus.Consumed)
+        if (newStatus != foodItem.Status && foodItem.Status != FoodStatus.Consumed && foodItem.Status != FoodStatus.Archived)
         {
             foodItem.Status = newStatus;
             foodItem.UpdatedAt = DateTime.UtcNow;

@@ -614,4 +614,93 @@ public class FoodItemService : IFoodItemService
 
         return (true, null, dto);
     }
+
+    public async Task<PagedResultDto<FoodItemDto>> GetHistoryAsync(FoodItemQueryParametersDto parameters, int? householdId = null, int? userId = null)
+    {
+        var queryParams = _mapper.Map<FoodItemQueryParameters>(parameters);
+        queryParams.IncludeArchived = true;
+        queryParams.Status = FoodStatus.Archived;
+
+        var resolvedHouseholdId = await ResolveHouseholdIdAsync(householdId, userId);
+        var result = await _unitOfWork.FoodItems.GetFilteredAsync(queryParams, resolvedHouseholdId);
+
+        return _mapper.Map<PagedResultDto<FoodItemDto>>(result);
+    }
+
+    public async Task<FoodItemDto> RestoreFromArchiveAsync(int id, int userId)
+    {
+        var foodItem = await _unitOfWork.FoodItems.GetByIdAsync(id);
+        if (foodItem == null)
+        {
+            throw new BusinessException("食材不存在");
+        }
+
+        if (!await _unitOfWork.HouseholdMembers.IsHouseholdMemberAsync(foodItem.HouseholdId, userId))
+        {
+            throw new UnauthorizedAccessException("您不是该家庭的成员，无法恢复食材");
+        }
+
+        if (foodItem.Status != FoodStatus.Archived)
+        {
+            throw new BusinessException("该食材未在历史记录中，无法恢复");
+        }
+
+        foodItem.Status = FoodStatusHelper.CalculateStatus(foodItem.ExpiryDate, foodItem.Quantity);
+        foodItem.UpdatedAt = DateTime.UtcNow;
+
+        await _unitOfWork.FoodItems.UpdateAsync(foodItem);
+        await _unitOfWork.SaveChangesAsync();
+
+        await _alertSyncService.SyncAlertsForFoodItemAsync(foodItem);
+
+        var operatorName = (await _unitOfWork.Users.GetByIdAsync(userId))?.Username ?? userId.ToString();
+        await _auditLogService.LogAsync("FoodItem", foodItem.Id, "RestoreFromArchive", userId, operatorName, foodItem.HouseholdId, $"从历史记录恢复食材「{foodItem.Name}」");
+
+        return _mapper.Map<FoodItemDto>(foodItem);
+    }
+
+    public async Task PermanentDeleteAsync(int id, int userId)
+    {
+        var foodItem = await _unitOfWork.FoodItems.GetByIdAsync(id);
+        if (foodItem == null)
+        {
+            throw new BusinessException("食材不存在");
+        }
+
+        if (!await _unitOfWork.HouseholdMembers.IsHouseholdMemberAsync(foodItem.HouseholdId, userId))
+        {
+            throw new UnauthorizedAccessException("您不是该家庭的成员，无法删除食材");
+        }
+
+        if (!string.IsNullOrEmpty(foodItem.PhotoUrl) || !string.IsNullOrEmpty(foodItem.ThumbnailUrl))
+        {
+            await _fileStorageService.DeleteAsync(foodItem.PhotoUrl ?? "", foodItem.ThumbnailUrl ?? "");
+        }
+
+        await _unitOfWork.FoodItems.DeleteAsync(id);
+        await _unitOfWork.SaveChangesAsync();
+
+        var operatorName = (await _unitOfWork.Users.GetByIdAsync(userId))?.Username ?? userId.ToString();
+        await _auditLogService.LogAsync("FoodItem", id, "PermanentDelete", userId, operatorName, foodItem.HouseholdId, $"彻底删除食材「{foodItem.Name}」");
+    }
+
+    public async Task<int> AutoArchiveAsync()
+    {
+        var households = await _unitOfWork.Households.GetAllAsync();
+        int totalArchived = 0;
+
+        foreach (var household in households)
+        {
+            var archiveDays = household.AutoArchiveDays > 0 ? household.AutoArchiveDays : 7;
+            var count = await _unitOfWork.FoodItems.ArchiveExpiredAsync(archiveDays);
+            totalArchived += count;
+        }
+
+        if (totalArchived > 0)
+        {
+            await _unitOfWork.SaveChangesAsync();
+        }
+
+        return totalArchived;
+    }
 }

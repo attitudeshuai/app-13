@@ -11,4 +11,6 @@ public interface IFoodItemRepository : IRepository<FoodItem, int>
     Task<List<FoodItem>> GetExpiringSoonAsync(int days);
     Task<List<FoodItem>> GetExpiredAsync();
     Task UpdateStatusAsync(int id, FoodStatus status);
+    Task<List<FoodItem>> GetToArchiveAsync(int autoArchiveDays);
+    Task<int> ArchiveExpiredAsync(int autoArchiveDays);
 }
