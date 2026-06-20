@@ -14,6 +14,7 @@ public interface IUnitOfWork : IDisposable
     IRecipeRepository Recipes { get; }
     IRecipeIngredientRepository RecipeIngredients { get; }
     IAuditLogRepository AuditLogs { get; }
+    INotificationRepository Notifications { get; }
 
     Task<int> SaveChangesAsync();
     Task BeginTransactionAsync();

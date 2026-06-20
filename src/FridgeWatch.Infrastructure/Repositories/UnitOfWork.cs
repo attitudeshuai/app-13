@@ -22,6 +22,7 @@ public class UnitOfWork : IUnitOfWork
     public IRecipeRepository Recipes { get; private set; }
     public IRecipeIngredientRepository RecipeIngredients { get; private set; }
     public IAuditLogRepository AuditLogs { get; private set; }
+    public INotificationRepository Notifications { get; private set; }
 
     public UnitOfWork(FridgeWatchDbContext context)
     {
@@ -38,6 +39,7 @@ public class UnitOfWork : IUnitOfWork
         Recipes = new RecipeRepository(context);
         RecipeIngredients = new RecipeIngredientRepository(context);
         AuditLogs = new AuditLogRepository(context);
+        Notifications = new NotificationRepository(context);
     }
 
     public async Task<int> SaveChangesAsync()

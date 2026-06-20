@@ -1,6 +1,7 @@
 using AutoMapper;
 using FridgeWatch.Domain.Entities;
 using FridgeWatch.Domain.Common;
+using FridgeWatch.Domain.Interfaces;
 using FridgeWatch.Application.DTOs;
 
 namespace FridgeWatch.Application.Mappings;
@@ -74,5 +75,11 @@ public class MappingProfile : Profile
 
         CreateMap<AuditLog, AuditLogDto>();
         CreateMap<AuditLogQueryParametersDto, QueryParameters>();
+
+        CreateMap<Notification, NotificationDto>();
+        CreateMap<NotificationCreateDto, Notification>();
+        CreateMap<NotificationUpdateDto, Notification>()
+            .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+        CreateMap<NotificationTypeUnreadCount, NotificationUnreadCountDto>();
     }
 }

@@ -22,6 +22,7 @@ public class FridgeWatchDbContext : DbContext
     public DbSet<Recipe> Recipes { get; set; }
     public DbSet<RecipeIngredient> RecipeIngredients { get; set; }
     public DbSet<AuditLog> AuditLogs { get; set; }
+    public DbSet<Notification> Notifications { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -181,6 +182,25 @@ public class FridgeWatchDbContext : DbContext
             entity.HasIndex(a => a.HouseholdId);
             entity.HasIndex(a => a.OperatorId);
             entity.HasIndex(a => a.OperatedAt);
+        });
+
+        // Notification 配置
+        modelBuilder.Entity<Notification>(entity =>
+        {
+            entity.Property(n => n.Title).IsRequired().HasMaxLength(200);
+            entity.Property(n => n.Content).IsRequired().HasMaxLength(1000);
+            entity.Property(n => n.Data).HasColumnType("json");
+            entity.Property(n => n.RelatedEntityType).HasMaxLength(50);
+            entity.HasOne(n => n.User)
+                  .WithMany(u => u.Notifications)
+                  .HasForeignKey(n => n.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(n => n.UserId);
+            entity.HasIndex(n => n.Type);
+            entity.HasIndex(n => n.Category);
+            entity.HasIndex(n => n.IsRead);
+            entity.HasIndex(n => n.HouseholdId);
+            entity.HasIndex(n => n.CreatedAt);
         });
     }
 }

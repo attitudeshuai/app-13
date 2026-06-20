@@ -14,4 +14,5 @@ public class User : BaseEntity<int>
     public virtual ICollection<HouseholdMember> HouseholdMembers { get; set; } = new List<HouseholdMember>();
     public virtual ICollection<ExpiryAlert> ExpiryAlerts { get; set; } = new List<ExpiryAlert>();
     public virtual ICollection<ConsumptionRecord> ConsumptionRecords { get; set; } = new List<ConsumptionRecord>();
+    public virtual ICollection<Notification> Notifications { get; set; } = new List<Notification>();
 }
