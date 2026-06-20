@@ -10,5 +10,7 @@ public interface IHouseholdMemberRepository : IRepository<HouseholdMember, int>
     Task<PagedResult<HouseholdMember>> GetByUserIdAsync(int userId, QueryParameters parameters);
     Task<HouseholdMember?> GetByHouseholdAndUserAsync(int householdId, int userId);
     Task<bool> IsHouseholdOwnerAsync(int householdId, int userId);
+    Task<bool> IsHouseholdAdminAsync(int householdId, int userId);
+    Task<bool> IsHouseholdOwnerOrAdminAsync(int householdId, int userId);
     Task<bool> IsHouseholdMemberAsync(int householdId, int userId);
 }

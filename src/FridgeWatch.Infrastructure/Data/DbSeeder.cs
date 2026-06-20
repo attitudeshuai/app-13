@@ -144,8 +144,15 @@ public static class DbSeeder
             {
                 HouseholdId = 1,
                 UserId = 2,
-                Role = HouseholdRole.Member,
+                Role = HouseholdRole.Admin,
                 JoinedAt = DateTime.UtcNow.AddDays(-25)
+            },
+            new HouseholdMember
+            {
+                HouseholdId = 1,
+                UserId = 3,
+                Role = HouseholdRole.Member,
+                JoinedAt = DateTime.UtcNow.AddDays(-20)
             },
             new HouseholdMember
             {

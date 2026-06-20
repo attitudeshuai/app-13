@@ -95,10 +95,10 @@ public class ShareService : IShareService
             throw new BusinessException("分享链接不存在");
         }
 
-        var isOwner = await _unitOfWork.HouseholdMembers.IsHouseholdOwnerAsync(shareLink.HouseholdId, userId);
-        if (!isOwner && shareLink.CreatedBy != userId)
+        var isOwnerOrAdmin = await _unitOfWork.HouseholdMembers.IsHouseholdOwnerOrAdminAsync(shareLink.HouseholdId, userId);
+        if (!isOwnerOrAdmin && shareLink.CreatedBy != userId)
         {
-            throw new UnauthorizedAccessException("只有家庭所有者或链接创建者可以撤销分享");
+            throw new UnauthorizedAccessException("只有家庭所有者、管理员或链接创建者可以撤销分享");
         }
 
         shareLink.IsRevoked = true;

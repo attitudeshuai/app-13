@@ -3,5 +3,6 @@ namespace FridgeWatch.Domain.Enums;
 public enum HouseholdRole
 {
     Owner = 1,
-    Member = 2
+    Admin = 2,
+    Member = 3
 }

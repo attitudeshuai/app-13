@@ -102,9 +102,9 @@ public class HouseholdService : IHouseholdService
             throw new BusinessException("家庭不存在");
         }
 
-        if (!await _unitOfWork.HouseholdMembers.IsHouseholdOwnerAsync(id, userId))
+        if (!await _unitOfWork.HouseholdMembers.IsHouseholdOwnerOrAdminAsync(id, userId))
         {
-            throw new UnauthorizedAccessException("只有家庭所有者可以修改家庭信息");
+            throw new UnauthorizedAccessException("只有家庭所有者或管理员可以修改家庭信息");
         }
 
         _mapper.Map(dto, household);
@@ -156,9 +156,9 @@ public class HouseholdService : IHouseholdService
             throw new BusinessException("家庭不存在");
         }
 
-        if (!await _unitOfWork.HouseholdMembers.IsHouseholdOwnerAsync(householdId, userId))
+        if (!await _unitOfWork.HouseholdMembers.IsHouseholdOwnerOrAdminAsync(householdId, userId))
         {
-            throw new UnauthorizedAccessException("只有家庭所有者可以重置邀请码");
+            throw new UnauthorizedAccessException("只有家庭所有者或管理员可以重置邀请码");
         }
 
         if (dto.ValidDays.HasValue && dto.ValidDays.Value <= 0)

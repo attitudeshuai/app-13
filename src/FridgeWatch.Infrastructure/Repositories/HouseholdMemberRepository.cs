@@ -79,6 +79,22 @@ public class HouseholdMemberRepository : Repository<HouseholdMember, int>, IHous
             hm.Role == HouseholdRole.Owner);
     }
 
+    public async Task<bool> IsHouseholdAdminAsync(int householdId, int userId)
+    {
+        return await _dbSet.AnyAsync(hm =>
+            hm.HouseholdId == householdId &&
+            hm.UserId == userId &&
+            hm.Role == HouseholdRole.Admin);
+    }
+
+    public async Task<bool> IsHouseholdOwnerOrAdminAsync(int householdId, int userId)
+    {
+        return await _dbSet.AnyAsync(hm =>
+            hm.HouseholdId == householdId &&
+            hm.UserId == userId &&
+            (hm.Role == HouseholdRole.Owner || hm.Role == HouseholdRole.Admin));
+    }
+
     public async Task<bool> IsHouseholdMemberAsync(int householdId, int userId)
     {
         return await _dbSet.AnyAsync(hm =>

@@ -108,9 +108,22 @@ public class HouseholdMemberService : IHouseholdMemberService
             throw new BusinessException("成员不存在");
         }
 
-        if (!await _unitOfWork.HouseholdMembers.IsHouseholdOwnerAsync(member.HouseholdId, userId))
+        var isOwner = await _unitOfWork.HouseholdMembers.IsHouseholdOwnerAsync(member.HouseholdId, userId);
+        var isAdmin = await _unitOfWork.HouseholdMembers.IsHouseholdAdminAsync(member.HouseholdId, userId);
+
+        if (!isOwner && !isAdmin)
         {
-            throw new UnauthorizedAccessException("只有家庭所有者可以修改成员角色");
+            throw new UnauthorizedAccessException("只有家庭所有者或管理员可以修改成员角色");
+        }
+
+        if (member.Role == HouseholdRole.Owner)
+        {
+            throw new BusinessException("无法修改家庭所有者的角色");
+        }
+
+        if (dto.Role == HouseholdRole.Owner && !isOwner)
+        {
+            throw new UnauthorizedAccessException("只有家庭所有者可以指定所有者角色");
         }
 
         _mapper.Map(dto, member);
@@ -137,9 +150,22 @@ public class HouseholdMemberService : IHouseholdMemberService
             throw new BusinessException("不能删除自己");
         }
 
-        if (!await _unitOfWork.HouseholdMembers.IsHouseholdOwnerAsync(member.HouseholdId, userId))
+        var isOwner = await _unitOfWork.HouseholdMembers.IsHouseholdOwnerAsync(member.HouseholdId, userId);
+        var isAdmin = await _unitOfWork.HouseholdMembers.IsHouseholdAdminAsync(member.HouseholdId, userId);
+
+        if (!isOwner && !isAdmin)
         {
-            throw new UnauthorizedAccessException("只有家庭所有者可以移除成员");
+            throw new UnauthorizedAccessException("只有家庭所有者或管理员可以移除成员");
+        }
+
+        if (member.Role == HouseholdRole.Owner)
+        {
+            throw new BusinessException("无法移除家庭所有者");
+        }
+
+        if (member.Role == HouseholdRole.Admin && !isOwner)
+        {
+            throw new UnauthorizedAccessException("只有家庭所有者可以移除管理员");
         }
 
         await _unitOfWork.HouseholdMembers.DeleteAsync(id);
@@ -166,8 +192,7 @@ public class HouseholdMemberService : IHouseholdMemberService
             throw new BusinessException("您不是该家庭的成员");
         }
 
-        var household = await _unitOfWork.Households.GetByIdAsync(householdId);
-        if (household != null && household.CreatedBy == userId)
+        if (member.Role == HouseholdRole.Owner)
         {
             throw new BusinessException("家庭所有者不能退出家庭，请先转让所有权或删除家庭");
         }
@@ -184,6 +209,7 @@ public class HouseholdMemberService : IHouseholdMemberService
         await _unitOfWork.SaveChangesAsync();
 
         var operatorName = (await _unitOfWork.Users.GetByIdAsync(userId))?.Username ?? userId.ToString();
+        var household = await _unitOfWork.Households.GetByIdAsync(householdId);
         await _auditLogService.LogAsync("HouseholdMember", member.Id, "Leave", userId, operatorName, householdId, $"退出家庭「{household?.Name}」");
     }
 }
