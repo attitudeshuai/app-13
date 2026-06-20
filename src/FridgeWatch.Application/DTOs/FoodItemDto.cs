@@ -15,9 +15,15 @@ public class FoodItemDto
     public decimal Quantity { get; set; }
     public string Unit { get; set; } = string.Empty;
     public string? PhotoUrl { get; set; }
+    public string? ThumbnailUrl { get; set; }
     public FoodStatus Status { get; set; }
     public DateTime CreatedAt { get; set; }
     public int DaysToExpiry { get; set; }
+}
+
+public class FoodItemDetailDto : FoodItemDto
+{
+    public string? OriginalPhotoUrl { get; set; }
 }
 
 public class FoodItemCreateDto
@@ -30,7 +36,6 @@ public class FoodItemCreateDto
     public DateTime ExpiryDate { get; set; }
     public decimal Quantity { get; set; }
     public string Unit { get; set; } = string.Empty;
-    public string? PhotoUrl { get; set; }
 }
 
 public class FoodItemUpdateDto
@@ -42,7 +47,6 @@ public class FoodItemUpdateDto
     public DateTime? ExpiryDate { get; set; }
     public decimal? Quantity { get; set; }
     public string? Unit { get; set; }
-    public string? PhotoUrl { get; set; }
 }
 
 public class FoodItemStatusUpdateDto

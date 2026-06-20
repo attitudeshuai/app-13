@@ -16,12 +16,14 @@ public class FoodItemService : IFoodItemService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly IExpiryAlertSyncService _alertSyncService;
+    private readonly IFileStorageService _fileStorageService;
 
-    public FoodItemService(IUnitOfWork unitOfWork, IMapper mapper, IExpiryAlertSyncService alertSyncService)
+    public FoodItemService(IUnitOfWork unitOfWork, IMapper mapper, IExpiryAlertSyncService alertSyncService, IFileStorageService fileStorageService)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _alertSyncService = alertSyncService;
+        _fileStorageService = fileStorageService;
     }
 
     public async Task<PagedResultDto<FoodItemDto>> GetListAsync(FoodItemQueryParametersDto parameters, int? householdId = null, int? userId = null)
@@ -53,7 +55,7 @@ public class FoodItemService : IFoodItemService
         return null;
     }
 
-    public async Task<FoodItemDto> GetByIdAsync(int id)
+    public async Task<FoodItemDetailDto> GetByIdAsync(int id)
     {
         var foodItem = await _unitOfWork.FoodItems.GetByIdAsync(id);
         if (foodItem == null)
@@ -61,10 +63,10 @@ public class FoodItemService : IFoodItemService
             throw new BusinessException("食材不存在");
         }
 
-        return _mapper.Map<FoodItemDto>(foodItem);
+        return _mapper.Map<FoodItemDetailDto>(foodItem);
     }
 
-    public async Task<FoodItemDto> CreateAsync(FoodItemCreateDto dto, int userId)
+    public async Task<FoodItemDto> CreateAsync(FoodItemCreateDto dto, int userId, Stream? photoStream = null, string? photoFileName = null)
     {
         if (!await _unitOfWork.HouseholdMembers.IsHouseholdMemberAsync(dto.HouseholdId, userId))
         {
@@ -75,6 +77,13 @@ public class FoodItemService : IFoodItemService
         foodItem.CreatedByUserId = userId;
         foodItem.Status = FoodStatusHelper.CalculateStatus(foodItem.ExpiryDate, foodItem.Quantity);
 
+        if (photoStream != null && !string.IsNullOrEmpty(photoFileName))
+        {
+            var (photoUrl, thumbnailUrl) = await _fileStorageService.SaveAsync(photoStream, photoFileName, "image/*");
+            foodItem.PhotoUrl = photoUrl;
+            foodItem.ThumbnailUrl = thumbnailUrl;
+        }
+
         await _unitOfWork.FoodItems.AddAsync(foodItem);
         await _unitOfWork.SaveChangesAsync();
 
@@ -83,7 +92,7 @@ public class FoodItemService : IFoodItemService
         return _mapper.Map<FoodItemDto>(foodItem);
     }
 
-    public async Task<FoodItemDto> UpdateAsync(int id, FoodItemUpdateDto dto, int userId)
+    public async Task<FoodItemDto> UpdateAsync(int id, FoodItemUpdateDto dto, int userId, Stream? photoStream = null, string? photoFileName = null)
     {
         var foodItem = await _unitOfWork.FoodItems.GetByIdAsync(id);
         if (foodItem == null)
@@ -97,6 +106,18 @@ public class FoodItemService : IFoodItemService
         }
 
         _mapper.Map(dto, foodItem);
+
+        if (photoStream != null && !string.IsNullOrEmpty(photoFileName))
+        {
+            if (!string.IsNullOrEmpty(foodItem.PhotoUrl) || !string.IsNullOrEmpty(foodItem.ThumbnailUrl))
+            {
+                await _fileStorageService.DeleteAsync(foodItem.PhotoUrl ?? "", foodItem.ThumbnailUrl ?? "");
+            }
+
+            var (photoUrl, thumbnailUrl) = await _fileStorageService.SaveAsync(photoStream, photoFileName, "image/*");
+            foodItem.PhotoUrl = photoUrl;
+            foodItem.ThumbnailUrl = thumbnailUrl;
+        }
 
         if (dto.ExpiryDate.HasValue)
         {
@@ -122,6 +143,11 @@ public class FoodItemService : IFoodItemService
         if (!await _unitOfWork.HouseholdMembers.IsHouseholdMemberAsync(foodItem.HouseholdId, userId))
         {
             throw new UnauthorizedAccessException("您不是该家庭的成员，无法删除食材");
+        }
+
+        if (!string.IsNullOrEmpty(foodItem.PhotoUrl) || !string.IsNullOrEmpty(foodItem.ThumbnailUrl))
+        {
+            await _fileStorageService.DeleteAsync(foodItem.PhotoUrl ?? "", foodItem.ThumbnailUrl ?? "");
         }
 
         await _unitOfWork.FoodItems.DeleteAsync(id);

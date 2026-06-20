@@ -34,18 +34,44 @@ public class FoodItemsController : ApiControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] FoodItemCreateDto dto)
+    [RequestSizeLimit(10 * 1024 * 1024)]
+    public async Task<IActionResult> Create([FromForm] FoodItemCreateDto dto, IFormFile? photo)
     {
         var userId = GetCurrentUserId();
-        var result = await _foodItemService.CreateAsync(dto, userId);
+
+        Stream? photoStream = null;
+        string? photoFileName = null;
+        if (photo != null && photo.Length > 0)
+        {
+            photoStream = new MemoryStream();
+            await photo.CopyToAsync(photoStream);
+            photoFileName = photo.FileName;
+        }
+
+        var result = await _foodItemService.CreateAsync(dto, userId, photoStream, photoFileName);
+        photoStream?.Dispose();
+
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, ApiResponse<FoodItemDto>.Success(result, "创建成功"));
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(int id, [FromBody] FoodItemUpdateDto dto)
+    [RequestSizeLimit(10 * 1024 * 1024)]
+    public async Task<IActionResult> Update(int id, [FromForm] FoodItemUpdateDto dto, IFormFile? photo)
     {
         var userId = GetCurrentUserId();
-        var result = await _foodItemService.UpdateAsync(id, dto, userId);
+
+        Stream? photoStream = null;
+        string? photoFileName = null;
+        if (photo != null && photo.Length > 0)
+        {
+            photoStream = new MemoryStream();
+            await photo.CopyToAsync(photoStream);
+            photoFileName = photo.FileName;
+        }
+
+        var result = await _foodItemService.UpdateAsync(id, dto, userId, photoStream, photoFileName);
+        photoStream?.Dispose();
+
         return Success(result, "更新成功");
     }
 

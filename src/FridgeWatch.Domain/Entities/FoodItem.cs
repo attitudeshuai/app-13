@@ -15,6 +15,7 @@ public class FoodItem : BaseEntity<int>
     public decimal Quantity { get; set; }
     public string Unit { get; set; } = string.Empty;
     public string? PhotoUrl { get; set; }
+    public string? ThumbnailUrl { get; set; }
     public FoodStatus Status { get; set; } = FoodStatus.Fresh;
 
     public virtual Household? Household { get; set; }

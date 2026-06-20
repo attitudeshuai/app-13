@@ -54,6 +54,7 @@ public static class InfrastructureServiceRegistration
         services.AddScoped<IRecipeIngredientRepository, RecipeIngredientRepository>();
 
         services.AddScoped<IJwtService, JwtService>();
+        services.AddScoped<Application.Interfaces.IFileStorageService, Services.LocalFileStorageService>();
 
         var jwtKey = configuration["Jwt:Key"] ?? "your-super-secret-key-for-jwt-token-must-be-at-least-32-chars";
         var jwtIssuer = configuration["Jwt:Issuer"] ?? "FridgeWatch";

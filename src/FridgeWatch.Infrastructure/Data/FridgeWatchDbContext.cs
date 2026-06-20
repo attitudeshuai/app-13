@@ -78,6 +78,7 @@ public class FridgeWatchDbContext : DbContext
             entity.Property(f => f.Category).IsRequired().HasMaxLength(50);
             entity.Property(f => f.Unit).IsRequired().HasMaxLength(20);
             entity.Property(f => f.PhotoUrl).HasMaxLength(500);
+            entity.Property(f => f.ThumbnailUrl).HasMaxLength(500);
             entity.Property(f => f.Quantity).HasColumnType("decimal(18,2)");
         });
 

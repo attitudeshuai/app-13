@@ -27,6 +27,9 @@ public class MappingProfile : Profile
 
         CreateMap<FoodItem, FoodItemDto>()
             .ForMember(dest => dest.DaysToExpiry, opt => opt.MapFrom(src => (src.ExpiryDate - DateTime.UtcNow).Days));
+        CreateMap<FoodItem, FoodItemDetailDto>()
+            .ForMember(dest => dest.DaysToExpiry, opt => opt.MapFrom(src => (src.ExpiryDate - DateTime.UtcNow).Days))
+            .ForMember(dest => dest.OriginalPhotoUrl, opt => opt.MapFrom(src => src.PhotoUrl));
         CreateMap<FoodItemCreateDto, FoodItem>();
         CreateMap<FoodItemUpdateDto, FoodItem>()
             .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));

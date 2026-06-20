@@ -142,12 +142,14 @@ public class FoodItemServiceTests
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly IMapper _mapper;
     private readonly Mock<IExpiryAlertSyncService> _alertSyncServiceMock;
+    private readonly Mock<IFileStorageService> _fileStorageServiceMock;
     private readonly FoodItemService _foodItemService;
 
     public FoodItemServiceTests()
     {
         _unitOfWorkMock = new Mock<IUnitOfWork>();
         _alertSyncServiceMock = new Mock<IExpiryAlertSyncService>();
+        _fileStorageServiceMock = new Mock<IFileStorageService>();
 
         var config = new MapperConfiguration(cfg =>
         {
@@ -155,7 +157,7 @@ public class FoodItemServiceTests
         });
         _mapper = config.CreateMapper();
 
-        _foodItemService = new FoodItemService(_unitOfWorkMock.Object, _mapper, _alertSyncServiceMock.Object);
+        _foodItemService = new FoodItemService(_unitOfWorkMock.Object, _mapper, _alertSyncServiceMock.Object, _fileStorageServiceMock.Object);
     }
 
     [Fact]
