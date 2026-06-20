@@ -150,13 +150,63 @@ public class ConsumptionRecordService : IConsumptionRecordService
             throw new UnauthorizedAccessException("只能修改自己的消耗记录");
         }
 
+        var foodItem = await _unitOfWork.FoodItems.GetByIdAsync(record.FoodItemId);
+        if (foodItem == null)
+        {
+            throw new BusinessException("对应食材不存在");
+        }
+
+        var oldConsumedQuantity = record.ConsumedQuantity;
+        var quantityChanged = dto.ConsumedQuantity.HasValue && dto.ConsumedQuantity.Value != oldConsumedQuantity;
+
+        if (quantityChanged)
+        {
+            var quantityDiff = dto.ConsumedQuantity!.Value - oldConsumedQuantity;
+            if (quantityDiff > foodItem.Quantity)
+            {
+                throw new BusinessException("消耗数量不能大于剩余数量");
+            }
+        }
+
         _mapper.Map(dto, record);
-        await _unitOfWork.ConsumptionRecords.UpdateAsync(record);
-        await _unitOfWork.SaveChangesAsync();
+
+        await _unitOfWork.BeginTransactionAsync();
+        try
+        {
+            if (quantityChanged)
+            {
+                var quantityDiff = dto.ConsumedQuantity!.Value - oldConsumedQuantity;
+                foodItem.Quantity -= quantityDiff;
+                if (foodItem.Quantity < 0)
+                {
+                    foodItem.Quantity = 0;
+                }
+                foodItem.Status = FoodStatusHelper.CalculateStatus(foodItem.ExpiryDate, foodItem.Quantity);
+                foodItem.UpdatedAt = DateTime.UtcNow;
+                await _unitOfWork.FoodItems.UpdateAsync(foodItem);
+            }
+
+            await _unitOfWork.ConsumptionRecords.UpdateAsync(record);
+            await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.CommitTransactionAsync();
+        }
+        catch
+        {
+            await _unitOfWork.RollbackTransactionAsync();
+            throw;
+        }
 
         var operatorName = (await _unitOfWork.Users.GetByIdAsync(userId))?.Username ?? userId.ToString();
-        var foodItem = await _unitOfWork.FoodItems.GetByIdAsync(record.FoodItemId);
-        await _auditLogService.LogAsync("ConsumptionRecord", record.Id, "Update", userId, operatorName, foodItem?.HouseholdId, $"修改消耗记录（食材：{foodItem?.Name}）");
+        string logDetail;
+        if (quantityChanged)
+        {
+            logDetail = $"修改消耗记录（食材：{foodItem.Name}，消耗数量从 {oldConsumedQuantity}{foodItem.Unit} 改为 {record.ConsumedQuantity}{foodItem.Unit}）";
+        }
+        else
+        {
+            logDetail = $"修改消耗记录（食材：{foodItem.Name}）";
+        }
+        await _auditLogService.LogAsync("ConsumptionRecord", record.Id, "Update", userId, operatorName, foodItem.HouseholdId, logDetail);
 
         return _mapper.Map<ConsumptionRecordDto>(record);
     }
