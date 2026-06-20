@@ -70,6 +70,14 @@ public class HouseholdService : IHouseholdService
             await _unitOfWork.HouseholdMembers.AddAsync(member);
             await _unitOfWork.SaveChangesAsync();
 
+            var user = await _unitOfWork.Users.GetByIdAsync(userId);
+            if (user != null && !user.DefaultHouseholdId.HasValue)
+            {
+                user.DefaultHouseholdId = household.Id;
+                await _unitOfWork.Users.UpdateAsync(user);
+                await _unitOfWork.SaveChangesAsync();
+            }
+
             await _unitOfWork.CommitTransactionAsync();
         }
         catch
@@ -112,6 +120,17 @@ public class HouseholdService : IHouseholdService
         if (!await _unitOfWork.HouseholdMembers.IsHouseholdOwnerAsync(id, userId))
         {
             throw new UnauthorizedAccessException("只有家庭所有者可以删除家庭");
+        }
+
+        var members = await _unitOfWork.HouseholdMembers.FindAsync(m => m.HouseholdId == id);
+        foreach (var member in members)
+        {
+            var user = await _unitOfWork.Users.GetByIdAsync(member.UserId);
+            if (user != null && user.DefaultHouseholdId == id)
+            {
+                user.DefaultHouseholdId = null;
+                await _unitOfWork.Users.UpdateAsync(user);
+            }
         }
 
         await _unitOfWork.Households.DeleteAsync(id);

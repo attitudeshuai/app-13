@@ -101,11 +101,66 @@ public class AuthService : IAuthService
             user.PasswordHash = _passwordHasher.HashPassword(user, dto.Password);
         }
 
+        if (dto.DefaultHouseholdId.HasValue && dto.DefaultHouseholdId.Value != user.DefaultHouseholdId)
+        {
+            await ValidateDefaultHouseholdAsync(userId, dto.DefaultHouseholdId.Value);
+        }
+
         _mapper.Map(dto, user);
         await _unitOfWork.Users.UpdateAsync(user);
         await _unitOfWork.SaveChangesAsync();
 
         return _mapper.Map<UserDto>(user);
+    }
+
+    public async Task<UserDto> SetDefaultHouseholdAsync(int userId, int? householdId)
+    {
+        var user = await _unitOfWork.Users.GetByIdAsync(userId);
+        if (user == null)
+        {
+            throw new BusinessException("用户不存在");
+        }
+
+        if (householdId.HasValue)
+        {
+            await ValidateDefaultHouseholdAsync(userId, householdId.Value);
+            user.DefaultHouseholdId = householdId.Value;
+        }
+        else
+        {
+            user.DefaultHouseholdId = null;
+        }
+
+        await _unitOfWork.Users.UpdateAsync(user);
+        await _unitOfWork.SaveChangesAsync();
+
+        return _mapper.Map<UserDto>(user);
+    }
+
+    public async Task<int?> GetDefaultHouseholdIdAsync(int userId)
+    {
+        var user = await _unitOfWork.Users.GetByIdAsync(userId);
+        if (user == null)
+        {
+            throw new BusinessException("用户不存在");
+        }
+
+        return user.DefaultHouseholdId;
+    }
+
+    private async Task ValidateDefaultHouseholdAsync(int userId, int householdId)
+    {
+        var household = await _unitOfWork.Households.GetByIdAsync(householdId);
+        if (household == null)
+        {
+            throw new BusinessException("家庭不存在");
+        }
+
+        var isMember = await _unitOfWork.HouseholdMembers.IsHouseholdMemberAsync(householdId, userId);
+        if (!isMember)
+        {
+            throw new BusinessException("您不是该家庭的成员，无法设为默认家庭");
+        }
     }
 
     private Task<LoginResponseDto> GenerateLoginResponseAsync(User user)

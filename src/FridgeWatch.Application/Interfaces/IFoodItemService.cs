@@ -6,7 +6,7 @@ namespace FridgeWatch.Application.Interfaces;
 
 public interface IFoodItemService
 {
-    Task<PagedResultDto<FoodItemDto>> GetListAsync(FoodItemQueryParametersDto parameters, int? householdId = null);
+    Task<PagedResultDto<FoodItemDto>> GetListAsync(FoodItemQueryParametersDto parameters, int? householdId = null, int? userId = null);
     Task<FoodItemDto> GetByIdAsync(int id);
     Task<FoodItemDto> CreateAsync(FoodItemCreateDto dto, int userId);
     Task<FoodItemDto> UpdateAsync(int id, FoodItemUpdateDto dto, int userId);

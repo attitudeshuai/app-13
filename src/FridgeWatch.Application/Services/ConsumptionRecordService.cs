@@ -22,18 +22,21 @@ public class ConsumptionRecordService : IConsumptionRecordService
     public async Task<PagedResultDto<ConsumptionRecordDto>> GetListAsync(
         QueryParametersDto parameters,
         int? foodItemId = null,
-        int? householdId = null)
+        int? householdId = null,
+        int? userId = null)
     {
         var queryParams = _mapper.Map<QueryParameters>(parameters);
+
+        var resolvedHouseholdId = await ResolveHouseholdIdAsync(householdId, userId);
 
         PagedResult<ConsumptionRecord> result;
         if (foodItemId.HasValue)
         {
             result = await _unitOfWork.ConsumptionRecords.GetByFoodItemIdAsync(foodItemId.Value, queryParams);
         }
-        else if (householdId.HasValue)
+        else if (resolvedHouseholdId.HasValue)
         {
-            result = await _unitOfWork.ConsumptionRecords.GetByHouseholdIdAsync(householdId.Value, queryParams);
+            result = await _unitOfWork.ConsumptionRecords.GetByHouseholdIdAsync(resolvedHouseholdId.Value, queryParams);
         }
         else
         {
@@ -41,6 +44,25 @@ public class ConsumptionRecordService : IConsumptionRecordService
         }
 
         return _mapper.Map<PagedResultDto<ConsumptionRecordDto>>(result);
+    }
+
+    private async Task<int?> ResolveHouseholdIdAsync(int? householdId, int? userId)
+    {
+        if (householdId.HasValue)
+        {
+            return householdId.Value;
+        }
+
+        if (userId.HasValue)
+        {
+            var user = await _unitOfWork.Users.GetByIdAsync(userId.Value);
+            if (user != null && user.DefaultHouseholdId.HasValue)
+            {
+                return user.DefaultHouseholdId.Value;
+            }
+        }
+
+        return null;
     }
 
     public async Task<PagedResultDto<ConsumptionRecordDto>> GetMineAsync(int userId, QueryParametersDto parameters)

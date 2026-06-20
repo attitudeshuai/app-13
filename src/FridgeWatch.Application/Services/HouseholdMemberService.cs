@@ -84,6 +84,14 @@ public class HouseholdMemberService : IHouseholdMemberService
         await _unitOfWork.HouseholdMembers.AddAsync(member);
         await _unitOfWork.SaveChangesAsync();
 
+        var user = await _unitOfWork.Users.GetByIdAsync(userId);
+        if (user != null && !user.DefaultHouseholdId.HasValue)
+        {
+            user.DefaultHouseholdId = household.Id;
+            await _unitOfWork.Users.UpdateAsync(user);
+            await _unitOfWork.SaveChangesAsync();
+        }
+
         return _mapper.Map<HouseholdMemberDto>(member);
     }
 
@@ -126,6 +134,40 @@ public class HouseholdMemberService : IHouseholdMemberService
         }
 
         await _unitOfWork.HouseholdMembers.DeleteAsync(id);
+
+        var user = await _unitOfWork.Users.GetByIdAsync(member.UserId);
+        if (user != null && user.DefaultHouseholdId == member.HouseholdId)
+        {
+            user.DefaultHouseholdId = null;
+            await _unitOfWork.Users.UpdateAsync(user);
+        }
+
+        await _unitOfWork.SaveChangesAsync();
+    }
+
+    public async Task LeaveHouseholdAsync(int householdId, int userId)
+    {
+        var member = await _unitOfWork.HouseholdMembers.GetByHouseholdAndUserAsync(householdId, userId);
+        if (member == null)
+        {
+            throw new BusinessException("您不是该家庭的成员");
+        }
+
+        var household = await _unitOfWork.Households.GetByIdAsync(householdId);
+        if (household != null && household.CreatedBy == userId)
+        {
+            throw new BusinessException("家庭所有者不能退出家庭，请先转让所有权或删除家庭");
+        }
+
+        await _unitOfWork.HouseholdMembers.DeleteAsync(member.Id);
+
+        var user = await _unitOfWork.Users.GetByIdAsync(userId);
+        if (user != null && user.DefaultHouseholdId == householdId)
+        {
+            user.DefaultHouseholdId = null;
+            await _unitOfWork.Users.UpdateAsync(user);
+        }
+
         await _unitOfWork.SaveChangesAsync();
     }
 }

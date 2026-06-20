@@ -63,4 +63,12 @@ public class HouseholdMembersController : ApiControllerBase
         await _householdMemberService.DeleteAsync(id, userId);
         return Success("删除成功");
     }
+
+    [HttpPost("leave/{householdId}")]
+    public async Task<IActionResult> Leave(int householdId)
+    {
+        var userId = GetCurrentUserId();
+        await _householdMemberService.LeaveHouseholdAsync(householdId, userId);
+        return Success("退出成功");
+    }
 }

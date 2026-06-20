@@ -11,4 +11,5 @@ public interface IHouseholdMemberService
     Task<HouseholdMemberDto> JoinHouseholdAsync(string inviteCode, int userId);
     Task<HouseholdMemberDto> UpdateAsync(int id, HouseholdMemberUpdateDto dto, int userId);
     Task DeleteAsync(int id, int userId);
+    Task LeaveHouseholdAsync(int householdId, int userId);
 }

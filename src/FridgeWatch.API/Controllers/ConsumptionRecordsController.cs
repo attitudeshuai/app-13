@@ -22,7 +22,8 @@ public class ConsumptionRecordsController : ApiControllerBase
         [FromQuery] int? foodItemId = null,
         [FromQuery] int? householdId = null)
     {
-        var result = await _consumptionRecordService.GetListAsync(parameters, foodItemId, householdId);
+        var userId = GetCurrentUserId();
+        var result = await _consumptionRecordService.GetListAsync(parameters, foodItemId, householdId, userId);
         return Success(result, "获取成功");
     }
 

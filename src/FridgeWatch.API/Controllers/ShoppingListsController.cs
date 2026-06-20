@@ -22,7 +22,8 @@ public class ShoppingListsController : ApiControllerBase
         [FromQuery] QueryParametersDto parameters,
         [FromQuery] int? householdId = null)
     {
-        var result = await _shoppingListService.GetListAsync(parameters, householdId);
+        var userId = GetCurrentUserId();
+        var result = await _shoppingListService.GetListAsync(parameters, householdId, userId);
         return Success(result, "获取成功");
     }
 

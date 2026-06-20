@@ -21,18 +21,38 @@ public class ShoppingListService : IShoppingListService
         _alertSyncService = alertSyncService;
     }
 
-    public async Task<PagedResultDto<ShoppingListDto>> GetListAsync(QueryParametersDto parameters, int? householdId = null)
+    public async Task<PagedResultDto<ShoppingListDto>> GetListAsync(QueryParametersDto parameters, int? householdId = null, int? userId = null)
     {
         var queryParams = _mapper.Map<QueryParameters>(parameters);
 
-        if (householdId.HasValue)
+        var resolvedHouseholdId = await ResolveHouseholdIdAsync(householdId, userId);
+        if (resolvedHouseholdId.HasValue)
         {
-            var result = await _unitOfWork.ShoppingLists.GetByHouseholdIdAsync(householdId.Value, queryParams);
+            var result = await _unitOfWork.ShoppingLists.GetByHouseholdIdAsync(resolvedHouseholdId.Value, queryParams);
             return _mapper.Map<PagedResultDto<ShoppingListDto>>(result);
         }
 
         var allResult = await _unitOfWork.ShoppingLists.GetPagedAsync(queryParams);
         return _mapper.Map<PagedResultDto<ShoppingListDto>>(allResult);
+    }
+
+    private async Task<int?> ResolveHouseholdIdAsync(int? householdId, int? userId)
+    {
+        if (householdId.HasValue)
+        {
+            return householdId.Value;
+        }
+
+        if (userId.HasValue)
+        {
+            var user = await _unitOfWork.Users.GetByIdAsync(userId.Value);
+            if (user != null && user.DefaultHouseholdId.HasValue)
+            {
+                return user.DefaultHouseholdId.Value;
+            }
+        }
+
+        return null;
     }
 
     public async Task<ShoppingListDto> GetByIdAsync(int id)

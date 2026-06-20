@@ -35,6 +35,10 @@ public class FridgeWatchDbContext : DbContext
             entity.Property(u => u.Email).IsRequired().HasMaxLength(100);
             entity.Property(u => u.PasswordHash).IsRequired().HasMaxLength(256);
             entity.Property(u => u.Avatar).HasMaxLength(500);
+            entity.HasOne(u => u.DefaultHousehold)
+                  .WithMany()
+                  .HasForeignKey(u => u.DefaultHouseholdId)
+                  .OnDelete(DeleteBehavior.SetNull);
         });
 
         // Household 配置

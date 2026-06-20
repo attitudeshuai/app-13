@@ -21,7 +21,8 @@ public class FoodItemsController : ApiControllerBase
         [FromQuery] FoodItemQueryParametersDto parameters,
         [FromQuery] int? householdId = null)
     {
-        var result = await _foodItemService.GetListAsync(parameters, householdId);
+        var userId = GetCurrentUserId();
+        var result = await _foodItemService.GetListAsync(parameters, householdId, userId);
         return Success(result, "获取成功");
     }
 

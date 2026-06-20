@@ -24,13 +24,33 @@ public class FoodItemService : IFoodItemService
         _alertSyncService = alertSyncService;
     }
 
-    public async Task<PagedResultDto<FoodItemDto>> GetListAsync(FoodItemQueryParametersDto parameters, int? householdId = null)
+    public async Task<PagedResultDto<FoodItemDto>> GetListAsync(FoodItemQueryParametersDto parameters, int? householdId = null, int? userId = null)
     {
         var queryParams = _mapper.Map<FoodItemQueryParameters>(parameters);
 
-        var result = await _unitOfWork.FoodItems.GetFilteredAsync(queryParams, householdId);
+        var resolvedHouseholdId = await ResolveHouseholdIdAsync(householdId, userId);
+        var result = await _unitOfWork.FoodItems.GetFilteredAsync(queryParams, resolvedHouseholdId);
 
         return _mapper.Map<PagedResultDto<FoodItemDto>>(result);
+    }
+
+    private async Task<int?> ResolveHouseholdIdAsync(int? householdId, int? userId)
+    {
+        if (householdId.HasValue)
+        {
+            return householdId.Value;
+        }
+
+        if (userId.HasValue)
+        {
+            var user = await _unitOfWork.Users.GetByIdAsync(userId.Value);
+            if (user != null && user.DefaultHouseholdId.HasValue)
+            {
+                return user.DefaultHouseholdId.Value;
+            }
+        }
+
+        return null;
     }
 
     public async Task<FoodItemDto> GetByIdAsync(int id)

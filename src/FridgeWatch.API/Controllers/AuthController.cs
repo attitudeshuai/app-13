@@ -45,4 +45,18 @@ public class AuthController : ApiControllerBase
         var result = await _authService.UpdateCurrentUserAsync(userId, dto);
         return Success(result, "更新成功");
     }
+
+    [HttpPut("me/default-household")]
+    [Authorize]
+    public async Task<IActionResult> SetDefaultHousehold([FromBody] SetDefaultHouseholdDto dto)
+    {
+        var userId = GetCurrentUserId();
+        var result = await _authService.SetDefaultHouseholdAsync(userId, dto.HouseholdId);
+        return Success(result, "设置默认家庭成功");
+    }
+}
+
+public class SetDefaultHouseholdDto
+{
+    public int? HouseholdId { get; set; }
 }

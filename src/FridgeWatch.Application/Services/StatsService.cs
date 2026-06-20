@@ -41,9 +41,10 @@ public class StatsService : IStatsService
 
         List<int> householdIds = new();
 
-        if (query.HouseholdId.HasValue)
+        var resolvedHouseholdId = await ResolveHouseholdIdAsync(query.HouseholdId, userId);
+        if (resolvedHouseholdId.HasValue)
         {
-            householdIds.Add(query.HouseholdId.Value);
+            householdIds.Add(resolvedHouseholdId.Value);
         }
         else if (userId.HasValue)
         {
@@ -131,9 +132,10 @@ public class StatsService : IStatsService
 
         List<int> householdIds = new();
 
-        if (query.HouseholdId.HasValue)
+        var resolvedHouseholdId = await ResolveHouseholdIdAsync(query.HouseholdId, userId);
+        if (resolvedHouseholdId.HasValue)
         {
-            householdIds.Add(query.HouseholdId.Value);
+            householdIds.Add(resolvedHouseholdId.Value);
         }
         else if (userId.HasValue)
         {
@@ -272,5 +274,24 @@ public class StatsService : IStatsService
         }
 
         return result.OrderByDescending(x => x.TotalActivities).ToList();
+    }
+
+    private async Task<int?> ResolveHouseholdIdAsync(int? householdId, int? userId)
+    {
+        if (householdId.HasValue)
+        {
+            return householdId.Value;
+        }
+
+        if (userId.HasValue)
+        {
+            var user = await _unitOfWork.Users.GetByIdAsync(userId.Value);
+            if (user != null && user.DefaultHouseholdId.HasValue)
+            {
+                return user.DefaultHouseholdId.Value;
+            }
+        }
+
+        return null;
     }
 }
