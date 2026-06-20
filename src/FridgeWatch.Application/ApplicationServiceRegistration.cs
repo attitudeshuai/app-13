@@ -26,6 +26,7 @@ public static class ApplicationServiceRegistration
         services.AddScoped<IExpiryAlertSyncService, ExpiryAlertSyncService>();
         services.AddScoped<IAuditLogService, AuditLogService>();
         services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<IDataExportService, DataExportService>();
 
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 
