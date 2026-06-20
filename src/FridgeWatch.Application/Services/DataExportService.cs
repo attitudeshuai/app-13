@@ -18,9 +18,9 @@ public class DataExportService : IDataExportService
 
     public async Task<byte[]> ExportAsync(DataExportRequestDto dto, int userId)
     {
-        if (!await _unitOfWork.HouseholdMembers.IsHouseholdMemberAsync(dto.HouseholdId, userId))
+        if (!await _unitOfWork.HouseholdMembers.IsHouseholdOwnerAsync(dto.HouseholdId, userId))
         {
-            throw new UnauthorizedAccessException("您不是该家庭的成员，无法导出数据");
+            throw new UnauthorizedAccessException("只有家庭所有者才能导出数据");
         }
 
         if (dto.StartDate > dto.EndDate)
@@ -42,8 +42,7 @@ public class DataExportService : IDataExportService
                   && cr.ConsumedAt <= endDate);
 
         var expiryAlerts = await _unitOfWork.ExpiryAlerts.FindAsync(
-            ea => ea.UserId == userId
-                  && ea.FoodItem!.HouseholdId == dto.HouseholdId
+            ea => ea.FoodItem!.HouseholdId == dto.HouseholdId
                   && ea.AlertDate >= startDate
                   && ea.AlertDate <= endDate);
 
