@@ -23,6 +23,7 @@ public static class ApplicationServiceRegistration
         services.AddScoped<IShoppingListService, ShoppingListService>();
         services.AddScoped<IShareService, ShareService>();
         services.AddScoped<IRecipeService, RecipeService>();
+        services.AddScoped<IExpiryAlertSyncService, ExpiryAlertSyncService>();
 
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 

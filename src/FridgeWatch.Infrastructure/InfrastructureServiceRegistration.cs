@@ -10,6 +10,7 @@ using FridgeWatch.Infrastructure.Repositories;
 using FridgeWatch.Infrastructure.Services;
 using FridgeWatch.Application.Interfaces;
 using MySqlConnector;
+using FridgeWatch.Infrastructure.BackgroundJobs;
 
 namespace FridgeWatch.Infrastructure;
 
@@ -76,6 +77,11 @@ public static class InfrastructureServiceRegistration
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
             };
         });
+
+        services.Configure<ExpiryAlertSchedulerOptions>(
+            configuration.GetSection(ExpiryAlertSchedulerOptions.SectionName));
+
+        services.AddHostedService<ExpiryAlertBackgroundService>();
 
         return services;
     }

@@ -12,11 +12,13 @@ public class ShoppingListService : IShoppingListService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
+    private readonly IExpiryAlertSyncService _alertSyncService;
 
-    public ShoppingListService(IUnitOfWork unitOfWork, IMapper mapper)
+    public ShoppingListService(IUnitOfWork unitOfWork, IMapper mapper, IExpiryAlertSyncService alertSyncService)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
+        _alertSyncService = alertSyncService;
     }
 
     public async Task<PagedResultDto<ShoppingListDto>> GetListAsync(QueryParametersDto parameters, int? householdId = null)
@@ -319,7 +321,7 @@ public class ShoppingListService : IShoppingListService
 
             foreach (var foodItem in createdFoodItems)
             {
-                await CheckAndSyncAlertsAsync(foodItem);
+                await _alertSyncService.SyncAlertsForFoodItemAsync(foodItem);
             }
 
             await _unitOfWork.CommitTransactionAsync();
@@ -331,46 +333,5 @@ public class ShoppingListService : IShoppingListService
         }
 
         return _mapper.Map<List<FoodItemDto>>(createdFoodItems);
-    }
-
-    private async Task CheckAndSyncAlertsAsync(FoodItem foodItem)
-    {
-        var daysToExpiry = (foodItem.ExpiryDate.Date - DateTime.UtcNow.Date).Days;
-        var needsAlert = daysToExpiry <= 3 && daysToExpiry >= 0;
-
-        var existingAlerts = await _unitOfWork.ExpiryAlerts
-            .FindAsync(a => a.FoodItemId == foodItem.Id && a.AlertType == AlertType.NearExpiry);
-
-        var householdMembers = await _unitOfWork.HouseholdMembers
-            .FindAsync(m => m.HouseholdId == foodItem.HouseholdId);
-
-        if (needsAlert)
-        {
-            foreach (var member in householdMembers)
-            {
-                var existingAlert = existingAlerts.FirstOrDefault(a => a.UserId == member.UserId);
-                if (existingAlert == null)
-                {
-                    var alert = new ExpiryAlert
-                    {
-                        FoodItemId = foodItem.Id,
-                        UserId = member.UserId,
-                        AlertType = AlertType.NearExpiry,
-                        AlertDate = DateTime.UtcNow,
-                        IsRead = false
-                    };
-                    await _unitOfWork.ExpiryAlerts.AddAsync(alert);
-                }
-            }
-        }
-        else
-        {
-            foreach (var alert in existingAlerts)
-            {
-                await _unitOfWork.ExpiryAlerts.DeleteAsync(alert.Id);
-            }
-        }
-
-        await _unitOfWork.SaveChangesAsync();
     }
 }
