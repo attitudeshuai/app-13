@@ -189,3 +189,242 @@ public class FoodItemServiceTests
         result.Status.Should().Be(FoodStatus.Fresh);
     }
 }
+
+public class CsvParserTests
+{
+    [Fact]
+    public void ParseCsvRecords_SimpleRows_ReturnsAllRecords()
+    {
+        var lines = new List<string>
+        {
+            "牛奶,乳制品,冷藏,2026-06-15,2026-06-25,2,盒",
+            "鸡胸肉,肉类,冷冻,2026-06-10,2026-07-10,1.5,kg",
+            "大米,主食,常温,2026-01-01,2026-12-31,10,kg"
+        };
+
+        var result = FoodItemService.ParseCsvRecords(lines);
+
+        result.Should().HaveCount(3);
+        result[0][0].Should().Be("牛奶");
+        result[0][6].Should().Be("盒");
+        result[2][0].Should().Be("大米");
+        result[2][5].Should().Be("10");
+    }
+
+    [Fact]
+    public void ParseCsvRecords_WithHeader_StillParsesAllRows()
+    {
+        var lines = new List<string>
+        {
+            "名称,分类,存放位置,购买日期,保质期,数量,单位",
+            "牛奶,乳制品,冷藏,2026-06-15,2026-06-25,2,盒",
+            "鸡胸肉,肉类,冷冻,2026-06-10,2026-07-10,1.5,kg"
+        };
+
+        var result = FoodItemService.ParseCsvRecords(lines);
+
+        result.Should().HaveCount(3);
+        result[0][0].Should().Be("名称");
+        result[1][0].Should().Be("牛奶");
+        result[2][0].Should().Be("鸡胸肉");
+    }
+
+    [Fact]
+    public void ParseCsvRecords_QuotedFieldWithComma_PreservesComma()
+    {
+        var lines = new List<string>
+        {
+            "\"Butter, salted\",乳制品,冷藏,2026-06-15,2026-06-25,1,盒",
+            "牛奶,乳制品,冷藏,2026-06-15,2026-06-25,2,盒"
+        };
+
+        var result = FoodItemService.ParseCsvRecords(lines);
+
+        result.Should().HaveCount(2);
+        result[0].Should().HaveCount(7);
+        result[0][0].Should().Be("Butter, salted");
+        result[0][1].Should().Be("乳制品");
+        result[0][6].Should().Be("盒");
+    }
+
+    [Fact]
+    public void ParseCsvRecords_DoubleQuotesInsideQuotedField_EscapesCorrectly()
+    {
+        var lines = new List<string>
+        {
+            "\"3\"\" 牛奶\",乳制品,冷藏,2026-06-15,2026-06-25,2,盒"
+        };
+
+        var result = FoodItemService.ParseCsvRecords(lines);
+
+        result.Should().HaveCount(1);
+        result[0][0].Should().Be("3\" 牛奶");
+    }
+
+    [Fact]
+    public void ParseCsvRecords_MultilineQuotedField_SpansLines()
+    {
+        var lines = new List<string>
+        {
+            "\"有机\n牛奶\",乳制品,冷藏,2026-06-15,2026-06-25,2,盒",
+            "大米,主食,常温,2026-01-01,2026-12-31,10,kg"
+        };
+
+        var result = FoodItemService.ParseCsvRecords(lines);
+
+        result.Should().HaveCount(2);
+        result[0][0].Should().Be("有机\n牛奶");
+        result[0][1].Should().Be("乳制品");
+        result[1][0].Should().Be("大米");
+    }
+
+    [Fact]
+    public void ParseCsvRecords_EmptyFields_ParsedAsEmpty()
+    {
+        var lines = new List<string>
+        {
+            "牛奶,,冷藏,,2026-06-25,2,"
+        };
+
+        var result = FoodItemService.ParseCsvRecords(lines);
+
+        result.Should().HaveCount(1);
+        result[0].Should().HaveCount(7);
+        result[0][0].Should().Be("牛奶");
+        result[0][1].Should().Be("");
+        result[0][3].Should().Be("");
+        result[0][6].Should().Be("");
+    }
+
+    [Fact]
+    public void ParseCsvRecords_EmptyQuotedField_ParsedAsEmpty()
+    {
+        var lines = new List<string>
+        {
+            "牛奶,\"\",冷藏,2026-06-15,2026-06-25,2,盒"
+        };
+
+        var result = FoodItemService.ParseCsvRecords(lines);
+
+        result.Should().HaveCount(1);
+        result[0][1].Should().Be("");
+    }
+
+    [Fact]
+    public void ParseCsvRecords_EmptyLines_StillProduceRecords()
+    {
+        var lines = new List<string>
+        {
+            "牛奶,乳制品,冷藏,2026-06-15,2026-06-25,2,盒",
+            "",
+            "大米,主食,常温,2026-01-01,2026-12-31,10,kg"
+        };
+
+        var result = FoodItemService.ParseCsvRecords(lines);
+
+        result.Should().HaveCount(3);
+        result[0][0].Should().Be("牛奶");
+        result[1][0].Should().Be("");
+        result[1].Should().HaveCount(1);
+        result[2][0].Should().Be("大米");
+    }
+
+    [Fact]
+    public void IsHeaderRow_ValidHeader_ReturnsTrue()
+    {
+        var row = new FoodItemImportRowDto
+        {
+            Name = "名称",
+            Category = "分类",
+            StorageLocation = "存放位置",
+            PurchaseDate = "购买日期",
+            ExpiryDate = "保质期",
+            Quantity = "数量",
+            Unit = "单位"
+        };
+
+        FoodItemService.IsHeaderRow(row).Should().BeTrue();
+    }
+
+    [Fact]
+    public void IsHeaderRow_PartialHeader_ReturnsTrue()
+    {
+        var row = new FoodItemImportRowDto
+        {
+            Name = "食物名称",
+            Category = "分类",
+            StorageLocation = "位置",
+            PurchaseDate = "进货日期",
+            ExpiryDate = "到期时间",
+            Quantity = "数量",
+            Unit = "单位"
+        };
+
+        FoodItemService.IsHeaderRow(row).Should().BeTrue();
+    }
+
+    [Fact]
+    public void IsHeaderRow_DataRow_ReturnsFalse()
+    {
+        var row = new FoodItemImportRowDto
+        {
+            Name = "牛奶",
+            Category = "乳制品",
+            StorageLocation = "冷藏",
+            PurchaseDate = "2026-06-15",
+            ExpiryDate = "2026-06-25",
+            Quantity = "2",
+            Unit = "盒"
+        };
+
+        FoodItemService.IsHeaderRow(row).Should().BeFalse();
+    }
+
+    [Fact]
+    public void IsHeaderRow_EmptyRow_ReturnsFalse()
+    {
+        var row = new FoodItemImportRowDto();
+
+        FoodItemService.IsHeaderRow(row).Should().BeFalse();
+    }
+
+    [Fact]
+    public void ParseCsvRecords_NoHeader_FirstRecordIsData()
+    {
+        var lines = new List<string>
+        {
+            "牛奶,乳制品,冷藏,2026-06-15,2026-06-25,2,盒",
+            "大米,主食,常温,2026-01-01,2026-12-31,10,kg",
+            "鸡胸肉,肉类,冷冻,2026-06-10,2026-07-10,1.5,kg"
+        };
+
+        var result = FoodItemService.ParseCsvRecords(lines);
+
+        result.Should().HaveCount(3);
+        result[0][0].Should().Be("牛奶");
+        result[1][0].Should().Be("大米");
+        result[2][0].Should().Be("鸡胸肉");
+    }
+
+    [Fact]
+    public void ParseCsvRecords_MixedQuotedAndUnquoted_ParsesCorrectly()
+    {
+        var lines = new List<string>
+        {
+            "名称,分类,存放位置,购买日期,保质期,数量,单位",
+            "\"有机,低脂牛奶\",乳制品,冷藏,2026-06-15,2026-06-25,2,盒",
+            "大米,主食,常温,2026-01-01,2026-12-31,10,kg",
+            "\"特级\n鸡胸肉\",肉类,冷冻,2026-06-10,2026-07-10,1.5,kg",
+            "\"3\"\" 装鸡蛋\",蛋类,冷藏,2026-06-20,2026-07-20,30,个"
+        };
+
+        var result = FoodItemService.ParseCsvRecords(lines);
+
+        result.Should().HaveCount(5);
+        result[0][0].Should().Be("名称");
+        result[1][0].Should().Be("有机,低脂牛奶");
+        result[2][0].Should().Be("大米");
+        result[3][0].Should().Be("特级\n鸡胸肉");
+        result[4][0].Should().Be("3\" 装鸡蛋");
+    }
+}
