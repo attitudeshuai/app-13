@@ -71,5 +71,8 @@ public class MappingProfile : Profile
         CreateMap<RecipeIngredient, RecipeIngredientDto>();
         CreateMap<RecipeIngredientCreateDto, RecipeIngredient>();
         CreateMap<RecipeIngredientUpdateDto, RecipeIngredient>();
+
+        CreateMap<AuditLog, AuditLogDto>();
+        CreateMap<AuditLogQueryParametersDto, QueryParameters>();
     }
 }

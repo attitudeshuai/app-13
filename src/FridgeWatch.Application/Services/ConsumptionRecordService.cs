@@ -12,11 +12,13 @@ public class ConsumptionRecordService : IConsumptionRecordService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
+    private readonly IAuditLogService _auditLogService;
 
-    public ConsumptionRecordService(IUnitOfWork unitOfWork, IMapper mapper)
+    public ConsumptionRecordService(IUnitOfWork unitOfWork, IMapper mapper, IAuditLogService auditLogService)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
+        _auditLogService = auditLogService;
     }
 
     public async Task<PagedResultDto<ConsumptionRecordDto>> GetListAsync(
@@ -128,6 +130,10 @@ public class ConsumptionRecordService : IConsumptionRecordService
             throw;
         }
 
+        var operatorName = (await _unitOfWork.Users.GetByIdAsync(userId))?.Username ?? userId.ToString();
+        var householdId = foodItem.HouseholdId;
+        await _auditLogService.LogAsync("ConsumptionRecord", record.Id, "Create", userId, operatorName, householdId, $"记录消耗食材「{foodItem.Name}」{dto.ConsumedQuantity}{foodItem.Unit}");
+
         return _mapper.Map<ConsumptionRecordDto>(record);
     }
 
@@ -147,6 +153,10 @@ public class ConsumptionRecordService : IConsumptionRecordService
         _mapper.Map(dto, record);
         await _unitOfWork.ConsumptionRecords.UpdateAsync(record);
         await _unitOfWork.SaveChangesAsync();
+
+        var operatorName = (await _unitOfWork.Users.GetByIdAsync(userId))?.Username ?? userId.ToString();
+        var foodItem = await _unitOfWork.FoodItems.GetByIdAsync(record.FoodItemId);
+        await _auditLogService.LogAsync("ConsumptionRecord", record.Id, "Update", userId, operatorName, foodItem?.HouseholdId, $"修改消耗记录（食材：{foodItem?.Name}）");
 
         return _mapper.Map<ConsumptionRecordDto>(record);
     }
@@ -188,5 +198,8 @@ public class ConsumptionRecordService : IConsumptionRecordService
             await _unitOfWork.RollbackTransactionAsync();
             throw;
         }
+
+        var operatorName = (await _unitOfWork.Users.GetByIdAsync(userId))?.Username ?? userId.ToString();
+        await _auditLogService.LogAsync("ConsumptionRecord", id, "Delete", userId, operatorName, foodItem.HouseholdId, $"删除消耗记录（食材：{foodItem.Name}，消耗 {record.ConsumedQuantity}{foodItem.Unit}）");
     }
 }

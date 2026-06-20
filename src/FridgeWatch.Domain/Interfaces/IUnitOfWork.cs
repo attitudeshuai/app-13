@@ -13,6 +13,7 @@ public interface IUnitOfWork : IDisposable
     IShareLinkRepository ShareLinks { get; }
     IRecipeRepository Recipes { get; }
     IRecipeIngredientRepository RecipeIngredients { get; }
+    IAuditLogRepository AuditLogs { get; }
 
     Task<int> SaveChangesAsync();
     Task BeginTransactionAsync();

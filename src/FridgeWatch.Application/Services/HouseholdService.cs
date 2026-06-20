@@ -12,11 +12,13 @@ public class HouseholdService : IHouseholdService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
+    private readonly IAuditLogService _auditLogService;
 
-    public HouseholdService(IUnitOfWork unitOfWork, IMapper mapper)
+    public HouseholdService(IUnitOfWork unitOfWork, IMapper mapper, IAuditLogService auditLogService)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
+        _auditLogService = auditLogService;
     }
 
     public async Task<PagedResultDto<HouseholdDto>> GetListAsync(QueryParametersDto parameters, int? userId = null)
@@ -86,6 +88,9 @@ public class HouseholdService : IHouseholdService
             throw;
         }
 
+        var operatorName = (await _unitOfWork.Users.GetByIdAsync(userId))?.Username ?? userId.ToString();
+        await _auditLogService.LogAsync("Household", household.Id, "Create", userId, operatorName, household.Id, $"创建家庭「{household.Name}」");
+
         return _mapper.Map<HouseholdDto>(household);
     }
 
@@ -105,6 +110,9 @@ public class HouseholdService : IHouseholdService
         _mapper.Map(dto, household);
         await _unitOfWork.Households.UpdateAsync(household);
         await _unitOfWork.SaveChangesAsync();
+
+        var operatorName = (await _unitOfWork.Users.GetByIdAsync(userId))?.Username ?? userId.ToString();
+        await _auditLogService.LogAsync("Household", household.Id, "Update", userId, operatorName, household.Id, $"修改家庭「{household.Name}」信息");
 
         return _mapper.Map<HouseholdDto>(household);
     }
@@ -135,6 +143,9 @@ public class HouseholdService : IHouseholdService
 
         await _unitOfWork.Households.DeleteAsync(id);
         await _unitOfWork.SaveChangesAsync();
+
+        var operatorName = (await _unitOfWork.Users.GetByIdAsync(userId))?.Username ?? userId.ToString();
+        await _auditLogService.LogAsync("Household", id, "Delete", userId, operatorName, id, $"删除家庭「{household.Name}」");
     }
 
     public async Task<HouseholdDto> ResetInviteCodeAsync(int householdId, ResetInviteCodeDto dto, int userId)
@@ -162,6 +173,9 @@ public class HouseholdService : IHouseholdService
 
         await _unitOfWork.Households.UpdateAsync(household);
         await _unitOfWork.SaveChangesAsync();
+
+        var operatorName = (await _unitOfWork.Users.GetByIdAsync(userId))?.Username ?? userId.ToString();
+        await _auditLogService.LogAsync("Household", household.Id, "ResetInviteCode", userId, operatorName, household.Id, $"重置家庭「{household.Name}」邀请码");
 
         return _mapper.Map<HouseholdDto>(household);
     }

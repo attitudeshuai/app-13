@@ -21,6 +21,7 @@ public class UnitOfWork : IUnitOfWork
     public IShareLinkRepository ShareLinks { get; private set; }
     public IRecipeRepository Recipes { get; private set; }
     public IRecipeIngredientRepository RecipeIngredients { get; private set; }
+    public IAuditLogRepository AuditLogs { get; private set; }
 
     public UnitOfWork(FridgeWatchDbContext context)
     {
@@ -36,6 +37,7 @@ public class UnitOfWork : IUnitOfWork
         ShareLinks = new ShareLinkRepository(context);
         Recipes = new RecipeRepository(context);
         RecipeIngredients = new RecipeIngredientRepository(context);
+        AuditLogs = new AuditLogRepository(context);
     }
 
     public async Task<int> SaveChangesAsync()

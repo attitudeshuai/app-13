@@ -24,6 +24,7 @@ public static class ApplicationServiceRegistration
         services.AddScoped<IShareService, ShareService>();
         services.AddScoped<IRecipeService, RecipeService>();
         services.AddScoped<IExpiryAlertSyncService, ExpiryAlertSyncService>();
+        services.AddScoped<IAuditLogService, AuditLogService>();
 
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 

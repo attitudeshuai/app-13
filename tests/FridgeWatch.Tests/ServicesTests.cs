@@ -79,11 +79,13 @@ public class HouseholdServiceTests
 {
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly IMapper _mapper;
+    private readonly Mock<IAuditLogService> _auditLogServiceMock;
     private readonly HouseholdService _householdService;
 
     public HouseholdServiceTests()
     {
         _unitOfWorkMock = new Mock<IUnitOfWork>();
+        _auditLogServiceMock = new Mock<IAuditLogService>();
 
         var config = new MapperConfiguration(cfg =>
         {
@@ -91,7 +93,7 @@ public class HouseholdServiceTests
         });
         _mapper = config.CreateMapper();
 
-        _householdService = new HouseholdService(_unitOfWorkMock.Object, _mapper);
+        _householdService = new HouseholdService(_unitOfWorkMock.Object, _mapper, _auditLogServiceMock.Object);
     }
 
     [Fact]
@@ -143,6 +145,7 @@ public class FoodItemServiceTests
     private readonly IMapper _mapper;
     private readonly Mock<IExpiryAlertSyncService> _alertSyncServiceMock;
     private readonly Mock<IFileStorageService> _fileStorageServiceMock;
+    private readonly Mock<IAuditLogService> _auditLogServiceMock;
     private readonly FoodItemService _foodItemService;
 
     public FoodItemServiceTests()
@@ -150,6 +153,7 @@ public class FoodItemServiceTests
         _unitOfWorkMock = new Mock<IUnitOfWork>();
         _alertSyncServiceMock = new Mock<IExpiryAlertSyncService>();
         _fileStorageServiceMock = new Mock<IFileStorageService>();
+        _auditLogServiceMock = new Mock<IAuditLogService>();
 
         var config = new MapperConfiguration(cfg =>
         {
@@ -157,7 +161,7 @@ public class FoodItemServiceTests
         });
         _mapper = config.CreateMapper();
 
-        _foodItemService = new FoodItemService(_unitOfWorkMock.Object, _mapper, _alertSyncServiceMock.Object, _fileStorageServiceMock.Object);
+        _foodItemService = new FoodItemService(_unitOfWorkMock.Object, _mapper, _alertSyncServiceMock.Object, _fileStorageServiceMock.Object, _auditLogServiceMock.Object);
     }
 
     [Fact]

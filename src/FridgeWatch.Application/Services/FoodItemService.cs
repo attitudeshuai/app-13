@@ -17,13 +17,15 @@ public class FoodItemService : IFoodItemService
     private readonly IMapper _mapper;
     private readonly IExpiryAlertSyncService _alertSyncService;
     private readonly IFileStorageService _fileStorageService;
+    private readonly IAuditLogService _auditLogService;
 
-    public FoodItemService(IUnitOfWork unitOfWork, IMapper mapper, IExpiryAlertSyncService alertSyncService, IFileStorageService fileStorageService)
+    public FoodItemService(IUnitOfWork unitOfWork, IMapper mapper, IExpiryAlertSyncService alertSyncService, IFileStorageService fileStorageService, IAuditLogService auditLogService)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _alertSyncService = alertSyncService;
         _fileStorageService = fileStorageService;
+        _auditLogService = auditLogService;
     }
 
     public async Task<PagedResultDto<FoodItemDto>> GetListAsync(FoodItemQueryParametersDto parameters, int? householdId = null, int? userId = null)
@@ -89,6 +91,9 @@ public class FoodItemService : IFoodItemService
 
         await _alertSyncService.SyncAlertsForFoodItemAsync(foodItem);
 
+        var operatorName = (await _unitOfWork.Users.GetByIdAsync(userId))?.Username ?? userId.ToString();
+        await _auditLogService.LogAsync("FoodItem", foodItem.Id, "Create", userId, operatorName, foodItem.HouseholdId, $"添加食材「{foodItem.Name}」，数量 {foodItem.Quantity}{foodItem.Unit}");
+
         return _mapper.Map<FoodItemDto>(foodItem);
     }
 
@@ -129,6 +134,9 @@ public class FoodItemService : IFoodItemService
 
         await _alertSyncService.SyncAlertsForFoodItemAsync(foodItem);
 
+        var operatorName = (await _unitOfWork.Users.GetByIdAsync(userId))?.Username ?? userId.ToString();
+        await _auditLogService.LogAsync("FoodItem", foodItem.Id, "Update", userId, operatorName, foodItem.HouseholdId, $"修改食材「{foodItem.Name}」");
+
         return _mapper.Map<FoodItemDto>(foodItem);
     }
 
@@ -152,6 +160,9 @@ public class FoodItemService : IFoodItemService
 
         await _unitOfWork.FoodItems.DeleteAsync(id);
         await _unitOfWork.SaveChangesAsync();
+
+        var operatorName = (await _unitOfWork.Users.GetByIdAsync(userId))?.Username ?? userId.ToString();
+        await _auditLogService.LogAsync("FoodItem", id, "Delete", userId, operatorName, foodItem.HouseholdId, $"删除食材「{foodItem.Name}」");
     }
 
     public async Task<FoodItemDto> UpdateStatusAsync(int id, FoodStatus status, int userId)
@@ -171,6 +182,9 @@ public class FoodItemService : IFoodItemService
         foodItem.UpdatedAt = DateTime.UtcNow;
         await _unitOfWork.FoodItems.UpdateAsync(foodItem);
         await _unitOfWork.SaveChangesAsync();
+
+        var operatorName = (await _unitOfWork.Users.GetByIdAsync(userId))?.Username ?? userId.ToString();
+        await _auditLogService.LogAsync("FoodItem", foodItem.Id, "UpdateStatus", userId, operatorName, foodItem.HouseholdId, $"更新食材「{foodItem.Name}」状态为 {status}");
 
         return _mapper.Map<FoodItemDto>(foodItem);
     }
@@ -266,6 +280,11 @@ public class FoodItemService : IFoodItemService
                 result.FailedCount++;
             }
         }
+
+        var operatorName = (await _unitOfWork.Users.GetByIdAsync(userId))?.Username ?? userId.ToString();
+        await _auditLogService.LogAsync("FoodItem", 0, "BulkImport", userId, operatorName, householdId,
+            $"批量导入食材：新增 {result.CreatedCount} 条，更新 {result.UpdatedCount} 条，失败 {result.FailedCount} 条",
+            $"总计 {result.TotalRows} 行");
 
         return result;
     }

@@ -12,11 +12,13 @@ public class HouseholdMemberService : IHouseholdMemberService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
+    private readonly IAuditLogService _auditLogService;
 
-    public HouseholdMemberService(IUnitOfWork unitOfWork, IMapper mapper)
+    public HouseholdMemberService(IUnitOfWork unitOfWork, IMapper mapper, IAuditLogService auditLogService)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
+        _auditLogService = auditLogService;
     }
 
     public async Task<PagedResultDto<HouseholdMemberDto>> GetListAsync(QueryParametersDto parameters, int? householdId = null)
@@ -92,6 +94,9 @@ public class HouseholdMemberService : IHouseholdMemberService
             await _unitOfWork.SaveChangesAsync();
         }
 
+        var operatorName = (await _unitOfWork.Users.GetByIdAsync(userId))?.Username ?? userId.ToString();
+        await _auditLogService.LogAsync("HouseholdMember", member.Id, "Join", userId, operatorName, household.Id, $"加入家庭「{household.Name}」");
+
         return _mapper.Map<HouseholdMemberDto>(member);
     }
 
@@ -111,6 +116,10 @@ public class HouseholdMemberService : IHouseholdMemberService
         _mapper.Map(dto, member);
         await _unitOfWork.HouseholdMembers.UpdateAsync(member);
         await _unitOfWork.SaveChangesAsync();
+
+        var operatorName = (await _unitOfWork.Users.GetByIdAsync(userId))?.Username ?? userId.ToString();
+        var targetUser = await _unitOfWork.Users.GetByIdAsync(member.UserId);
+        await _auditLogService.LogAsync("HouseholdMember", member.Id, "Update", userId, operatorName, member.HouseholdId, $"修改成员「{targetUser?.Username}」角色为 {member.Role}");
 
         return _mapper.Map<HouseholdMemberDto>(member);
     }
@@ -143,6 +152,10 @@ public class HouseholdMemberService : IHouseholdMemberService
         }
 
         await _unitOfWork.SaveChangesAsync();
+
+        var operatorName = (await _unitOfWork.Users.GetByIdAsync(userId))?.Username ?? userId.ToString();
+        var removedUser = await _unitOfWork.Users.GetByIdAsync(member.UserId);
+        await _auditLogService.LogAsync("HouseholdMember", id, "Delete", userId, operatorName, member.HouseholdId, $"移除成员「{removedUser?.Username}」");
     }
 
     public async Task LeaveHouseholdAsync(int householdId, int userId)
@@ -169,5 +182,8 @@ public class HouseholdMemberService : IHouseholdMemberService
         }
 
         await _unitOfWork.SaveChangesAsync();
+
+        var operatorName = (await _unitOfWork.Users.GetByIdAsync(userId))?.Username ?? userId.ToString();
+        await _auditLogService.LogAsync("HouseholdMember", member.Id, "Leave", userId, operatorName, householdId, $"退出家庭「{household?.Name}」");
     }
 }

@@ -21,6 +21,7 @@ public class FridgeWatchDbContext : DbContext
     public DbSet<ShareLink> ShareLinks { get; set; }
     public DbSet<Recipe> Recipes { get; set; }
     public DbSet<RecipeIngredient> RecipeIngredients { get; set; }
+    public DbSet<AuditLog> AuditLogs { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -166,6 +167,20 @@ public class FridgeWatchDbContext : DbContext
             entity.Property(ri => ri.IngredientCategory).IsRequired().HasMaxLength(50);
             entity.Property(ri => ri.Unit).IsRequired().HasMaxLength(20);
             entity.Property(ri => ri.Quantity).HasColumnType("decimal(18,2)");
+        });
+
+        // AuditLog 配置
+        modelBuilder.Entity<AuditLog>(entity =>
+        {
+            entity.Property(a => a.EntityType).IsRequired().HasMaxLength(50);
+            entity.Property(a => a.Action).IsRequired().HasMaxLength(20);
+            entity.Property(a => a.OperatorName).IsRequired().HasMaxLength(100);
+            entity.Property(a => a.Summary).IsRequired().HasMaxLength(500);
+            entity.Property(a => a.Detail).HasMaxLength(2000);
+            entity.HasIndex(a => a.EntityType);
+            entity.HasIndex(a => a.HouseholdId);
+            entity.HasIndex(a => a.OperatorId);
+            entity.HasIndex(a => a.OperatedAt);
         });
     }
 }
