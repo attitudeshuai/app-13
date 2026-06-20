@@ -139,9 +139,9 @@ public class FoodItemService : IFoodItemService
         }
 
         var ext = Path.GetExtension(fileName).ToLowerInvariant();
-        if (ext != ".xlsx" && ext != ".xls" && ext != ".csv")
+        if (ext != ".xlsx" && ext != ".csv")
         {
-            throw new BusinessException("仅支持 .xlsx、.xls 或 .csv 格式的文件");
+            throw new BusinessException("仅支持 .xlsx 或 .csv 格式的文件");
         }
 
         var rows = ext == ".csv"
@@ -320,27 +320,23 @@ public class FoodItemService : IFoodItemService
         fileStream.Position = 0;
 
         using var reader = new StreamReader(fileStream, Encoding.UTF8);
+        var allLines = new List<string>();
         string? line;
-        bool isHeader = true;
-        int rowNum = 1;
-
         while ((line = reader.ReadLine()) != null)
         {
-            if (isHeader)
-            {
-                isHeader = false;
-                continue;
-            }
+            allLines.Add(line);
+        }
 
-            rowNum++;
-            if (string.IsNullOrWhiteSpace(line)) continue;
+        var parsedRows = ParseCsvRecords(allLines);
 
-            var values = line.Split(',').Select(v => v.Trim().Trim('"')).ToArray();
+        for (int i = 0; i < parsedRows.Count; i++)
+        {
+            var values = parsedRows[i];
             if (values.All(string.IsNullOrWhiteSpace)) continue;
 
             rows.Add(new FoodItemImportRowDto
             {
-                RowNumber = rowNum,
+                RowNumber = i + 2,
                 Name = values.Length > 0 ? values[0] : string.Empty,
                 Category = values.Length > 1 ? values[1] : string.Empty,
                 StorageLocation = values.Length > 2 ? values[2] : string.Empty,
@@ -351,7 +347,114 @@ public class FoodItemService : IFoodItemService
             });
         }
 
+        if (rows.Count > 0 && IsHeaderRow(rows[0]))
+        {
+            rows.RemoveAt(0);
+            foreach (var row in rows)
+            {
+                row.RowNumber--;
+            }
+        }
+
         return rows;
+    }
+
+    private static bool IsHeaderRow(FoodItemImportRowDto row)
+    {
+        var headerKeywords = new[] { "名称", "分类", "存放位置", "购买日期", "保质期", "数量", "单位" };
+        var fields = new[] { row.Name, row.Category, row.StorageLocation, row.PurchaseDate, row.ExpiryDate, row.Quantity, row.Unit };
+        var matchCount = fields.Count(f => headerKeywords.Any(k => f.IndexOf(k, StringComparison.OrdinalIgnoreCase) >= 0));
+        return matchCount >= 3;
+    }
+
+    private static List<string[]> ParseCsvRecords(List<string> lines)
+    {
+        var records = new List<string[]>();
+        var currentFields = new List<string>();
+        var currentField = new StringBuilder();
+        bool inQuotes = false;
+        int i = 0;
+        bool skipHeader = true;
+
+        while (i < lines.Count)
+        {
+            var line = lines[i];
+            int pos = 0;
+
+            while (pos < line.Length)
+            {
+                if (inQuotes)
+                {
+                    if (line[pos] == '"')
+                    {
+                        if (pos + 1 < line.Length && line[pos + 1] == '"')
+                        {
+                            currentField.Append('"');
+                            pos += 2;
+                        }
+                        else
+                        {
+                            inQuotes = false;
+                            pos++;
+                        }
+                    }
+                    else
+                    {
+                        currentField.Append(line[pos]);
+                        pos++;
+                    }
+                }
+                else
+                {
+                    if (line[pos] == '"')
+                    {
+                        inQuotes = true;
+                        pos++;
+                    }
+                    else if (line[pos] == ',')
+                    {
+                        currentFields.Add(currentField.ToString());
+                        currentField.Clear();
+                        pos++;
+                    }
+                    else
+                    {
+                        currentField.Append(line[pos]);
+                        pos++;
+                    }
+                }
+            }
+
+            if (inQuotes)
+            {
+                currentField.Append('\n');
+                i++;
+            }
+            else
+            {
+                currentFields.Add(currentField.ToString());
+                currentField.Clear();
+
+                if (skipHeader)
+                {
+                    skipHeader = false;
+                }
+                else
+                {
+                    records.Add(currentFields.ToArray());
+                }
+                currentFields.Clear();
+                i++;
+            }
+        }
+
+        if (currentFields.Count > 0 || currentField.Length > 0)
+        {
+            currentFields.Add(currentField.ToString());
+            records.Add(currentFields.ToArray());
+        }
+
+        return records;
     }
 
     private static string GetCellString(IXLCell cell)

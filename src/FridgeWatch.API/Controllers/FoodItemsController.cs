@@ -65,7 +65,6 @@ public class FoodItemsController : ApiControllerBase
     }
 
     [HttpGet("template")]
-    [AllowAnonymous]
     public async Task<IActionResult> DownloadTemplate()
     {
         var templateBytes = await _foodItemService.DownloadTemplateAsync();
